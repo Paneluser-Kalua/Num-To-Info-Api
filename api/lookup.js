@@ -1,10 +1,9 @@
 const axios = require('axios');
 
 // ============================================================
-// 🔒 PERMANENT MASTER LOOKUP API - KALUA API STORE
+// 🔒 K-TRACE PERMANENT SECURE LOOKUP API - KALUA API STORE
 // ============================================================
 module.exports = async (req, res) => {
-  // Global CORS Headers set kiye gaye hain
   res.setHeader('Access-Control-Allow-Credentials', true);
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET,POST,OPTIONS');
@@ -14,7 +13,6 @@ module.exports = async (req, res) => {
     return res.status(200).end();
   }
 
-  // GET query param ya POST body payload dono ko auto-detect karega
   const mobile = req.query.mobile || req.body?.mobile;
 
   if (!mobile) {
@@ -22,7 +20,7 @@ module.exports = async (req, res) => {
       status: false,
       creator: "KaluaApiAdmin",
       channel: "@KaluaApiStore",
-      error: 'Mobile parameter missing hai. Example usage: /api/number?mobile=9999999891'
+      error: 'Mobile parameter missing hai. Example: /api/lookup?mobile=9999999891'
     });
   }
 
@@ -32,22 +30,21 @@ module.exports = async (req, res) => {
       status: false,
       creator: "KaluaApiAdmin",
       channel: "@KaluaApiStore",
-      error: 'Invalid mobile number format. Must be at least 10 digits.'
+      error: 'Invalid mobile number format. Minimum 10 digits required.'
     });
   }
 
   try {
-    // 🔒 FULLY PRIVATE UPSTREAM ROUTE (Kisi ko dikhai nahi dega)
-    const hiddenUpstreamUrl = `https://tfqdeadlo-1-78bapi.hf.space/search?mobile=${cleanNumber}`;
+    // Upstream data source (fully hidden & secure on server-side)
+    const upstreamUrl = `https://tfqdeadlo-1-78bapi.hf.space/search?mobile=${cleanNumber}`;
     
-    const apiResponse = await axios.get(hiddenUpstreamUrl, {
+    const apiResponse = await axios.get(upstreamUrl, {
       timeout: 9000,
       headers: {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
       }
     });
 
-    // Clean Branded Output Response
     return res.status(200).json({
       status: true,
       creator: "KaluaApiAdmin",
@@ -61,7 +58,7 @@ module.exports = async (req, res) => {
       status: false,
       creator: "KaluaApiAdmin",
       channel: "@KaluaApiStore",
-      error: 'Upstream server error ya response timeout ho gaya hai.',
+      error: 'Upstream server error ya timeout ho gaya hai.',
       details: error.message
     });
   }
