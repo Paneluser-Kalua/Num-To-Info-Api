@@ -1,0 +1,13 @@
+{
+  "version": 2,
+  "routes": [
+    { "src": "/search", "dest": "/api/number.js" },
+    { "src": "/api/number", "dest": "/api/number.js" },
+    { "src": "/(.*)", "dest": "/index.html" }
+  ],
+  "functions": {
+    "api/number.js": {
+      "maxDuration": 10
+    }
+  }
+}
