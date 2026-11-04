@@ -98,10 +98,6 @@ module.exports = async (req, res) => {
  🗺️ State           : ${state}
  📮 Pincode         : ${pincode}
 
-📊 [ RAW DATA OVERVIEW ]
---------------------------------------------------------------
-${JSON.stringify(rawData, null, 2)}
-
 ══════════════════════════════════════════════════════════════
  🔒 SECURED & POWERED BY K-TRACE (VERCEL EDGE INFRASTRUCTURE)
 ══════════════════════════════════════════════════════════════
