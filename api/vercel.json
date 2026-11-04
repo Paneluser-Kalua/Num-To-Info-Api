@@ -1,12 +1,11 @@
 {
   "version": 2,
-  "routes": [
-    { "src": "/search", "dest": "/api/number.js" },
-    { "src": "/api/number", "dest": "/api/number.js" },
-    { "src": "/(.*)", "dest": "/index.html" }
+  "rewrites": [
+    { "source": "/api/lookup", "destination": "/api/lookup.js" },
+    { "source": "/(.*)", "destination": "/index.html" }
   ],
   "functions": {
-    "api/number.js": {
+    "api/lookup.js": {
       "maxDuration": 10
     }
   }
