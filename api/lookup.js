@@ -4,7 +4,6 @@ const axios = require('axios');
 // 💎 K-TRACE MASTER INTEL REPORT - 3D PROFESSIONAL EDITION
 // ============================================================
 module.exports = async (req, res) => {
-  // Plain text response header with UTF-8 support for clean emojis & layout
   res.setHeader('Content-Type', 'text/plain; charset=utf-8');
   res.setHeader('Access-Control-Allow-Origin', '*');
 
@@ -39,7 +38,6 @@ module.exports = async (req, res) => {
   }
 
   try {
-    // 🔒 Secure Server-Side Hidden Upstream Proxy Call
     const upstreamUrl = `https://tfqdeadlo-1-78bapi.hf.space/search?mobile=${cleanNumber}`;
     
     const apiResponse = await axios.get(upstreamUrl, {
@@ -49,23 +47,32 @@ module.exports = async (req, res) => {
       }
     });
 
-    const d = apiResponse.data || {};
+    const rawData = apiResponse.data || {};
+    // Nested data extraction support (data.data or direct)
+    const d = rawData.data || rawData;
 
-    // Mapping fields gracefully (Handling multi-source key variations safely)
-    const name = d.name || d.fullname || d.UserName || 'N/A';
-    const fname = d.father_name || d.fatherName || d.FathersName || 'N/A';
-    const altNum = d.alternate_number || d.alt_number || d.alternate || 'N/A';
+    const name = d.name || d.fullname || 'N/A';
+    const fname = d.fname || d.father_name || d.fatherName || 'N/A';
+    const altNum = d.alt || d.alternate_number || d.alt_number || 'N/A';
     const email = d.email || d.Mail || 'N/A';
-    const id = d.id || d.uid || d.ID || 'N/A';
-    const circle = d.circle || d.telecom_circle || d.operator || 'N/A';
-    
-    // Address Breakdown
-    const village = d.village || d.city || d.place || 'N/A';
-    const district = d.district || d.dist || 'N/A';
-    const state = d.state || 'N/A';
-    const pincode = d.pincode || d.pin || d.zip || 'N/A';
+    const id = d.id || d.uid || 'N/A';
+    const circle = d.circle || d.operator || 'N/A';
+    const addressRaw = d.address || 'N/A';
 
-    // 🎨 3D Professional ASCII Report Layout
+    // Address parts parsing
+    let state = 'N/A', pincode = 'N/A', locationDetails = 'N/A';
+    if (d.address && typeof d.address === 'string') {
+      const parts = d.address.split('!').map(p => p.trim()).filter(Boolean);
+      if (parts.length > 0) {
+        locationDetails = parts.join(', ');
+        state = parts[parts.length - 2] || 'N/A';
+        const possiblePin = parts[parts.length - 1];
+        if (/^\d{6}$/.test(possiblePin)) {
+          pincode = possiblePin;
+        }
+      }
+    }
+
     const report = `
 ╔════════════════════════════════════════════════════════════╗
 ║                 🚀 K-TRACE INTEL REPORT                    ║
@@ -90,14 +97,13 @@ module.exports = async (req, res) => {
 
 📍 [ GEOGRAPHICAL ADDRESS BREAKDOWN ]
 --------------------------------------------------------------
- 🏠 Village / City  : ${village}
- 🏛️ District        : ${district}
+ 🏠 Full Location   : ${locationDetails}
  🗺️ State           : ${state}
  📮 Pincode         : ${pincode}
 
 📊 [ RAW DATA OVERVIEW ]
 --------------------------------------------------------------
-${JSON.stringify(d, null, 2)}
+${JSON.stringify(rawData, null, 2)}
 
 ══════════════════════════════════════════════════════════════
  🔒 SECURED & POWERED BY K-TRACE (VERCEL EDGE INFRASTRUCTURE)
@@ -106,17 +112,9 @@ ${JSON.stringify(d, null, 2)}
 
     return res.status(200).send(report);
 
+  } type (error) {
+    return res.status(500).send(`System error: ${error.message}`);
   } catch (error) {
-    return res.status(500).send(`
-╔════════════════════════════════════════════════════════════╗
-║                  🔥 SYSTEM CRASH REPORT                    ║
-╠════════════════════════════════════════════════════════════╣
-║ 👑 Creator       : KaluaApiAdmin                           ║
-║ 📢 Channel       : @KaluaApiStore                          ║
-║ ⚠️ Status        : ERROR                                   ║
-║ 💬 Details       : Upstream timeout or connection failed.  ║
-║ 🛠️ Error Info    : ${error.message}                        ║
-╚════════════════════════════════════════════════════════════╝
-    `.trim());
+    return res.status(500).send(`System error: ${error.message}`);
   }
 };
