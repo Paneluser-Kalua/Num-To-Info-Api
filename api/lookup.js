@@ -48,7 +48,6 @@ module.exports = async (req, res) => {
     });
 
     const rawData = apiResponse.data || {};
-    // Nested data extraction support (data.data or direct)
     const d = rawData.data || rawData;
 
     const name = d.name || d.fullname || 'N/A';
@@ -57,9 +56,7 @@ module.exports = async (req, res) => {
     const email = d.email || d.Mail || 'N/A';
     const id = d.id || d.uid || 'N/A';
     const circle = d.circle || d.operator || 'N/A';
-    const addressRaw = d.address || 'N/A';
 
-    // Address parts parsing
     let state = 'N/A', pincode = 'N/A', locationDetails = 'N/A';
     if (d.address && typeof d.address === 'string') {
       const parts = d.address.split('!').map(p => p.trim()).filter(Boolean);
@@ -112,9 +109,17 @@ ${JSON.stringify(rawData, null, 2)}
 
     return res.status(200).send(report);
 
-  } type (error) {
-    return res.status(500).send(`System error: ${error.message}`);
   } catch (error) {
-    return res.status(500).send(`System error: ${error.message}`);
+    return res.status(500).send(`
+╔════════════════════════════════════════════════════════════╗
+║                  🔥 SYSTEM CRASH REPORT                    ║
+╠════════════════════════════════════════════════════════════╣
+║ 👑 Creator       : KaluaApiAdmin                           ║
+║ 📢 Channel       : @KaluaApiStore                          ║
+║ ⚠️ Status        : ERROR                                   ║
+║ 💬 Details       : Upstream timeout or connection failed.  ║
+║ 🛠️ Error Info    : ${error.message}                        ║
+╚════════════════════════════════════════════════════════════╝
+    `.trim());
   }
 };
