@@ -1,0 +1,12 @@
+{
+  "name": "k-trace",
+  "version": "1.0.0",
+  "description": "Permanent Secure Lookup API - Built by KaluaApiAdmin (@KaluaApiStore)",
+  "main": "api/lookup.js",
+  "dependencies": {
+    "axios": "^1.7.9"
+  },
+  "engines": {
+    "node": ">=18.x"
+  }
+}
