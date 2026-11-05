@@ -96,7 +96,7 @@ module.exports = async (req, res) => {
         "🗺️ State": state,
         "📮 Pincode": pincode
       },
-      "footer": "🔒 SECURED & POWERED BY K-TRACE ( KALUA X ADITYA )"
+      "🔒 SECURED & POWERED BY K-TRACE ( KALUA X ADITYA )"
     };
 
     return res.status(200).send(JSON.stringify(responseData, null, 2));
