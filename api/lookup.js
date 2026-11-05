@@ -1,11 +1,7 @@
 const axios = require('axios');
 
-// ⏱️ Vercel Function Execution Limit Set (15 Seconds)
 module.exports.maxDuration = 15;
 
-// ============================================================
-// 💎 K-TRACE MASTER INTEL API - EXACT TEXT FORMAT IN JSON
-// ============================================================
 module.exports = async (req, res) => {
   res.setHeader('Content-Type', 'application/json; charset=utf-8');
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -13,41 +9,26 @@ module.exports = async (req, res) => {
   const mobile = req.query.mobile;
 
   if (!mobile) {
-    const errorReport = `
-╔════════════════════════════════════════════════════════════╗
-║                    ❌ K-TRACE ERROR LOG                    ║
-╠════════════════════════════════════════════════════════════╣
-║ 👑 Creator       : KaluaApiAdmin                           ║
-║ 📢 Channel       : @KaluaApiStore                          ║
-║ ⚠️ Status        : FAILED                                  ║
-║ 💬 Message       : Mobile parameter missing hai!           ║
-║ 🔍 Usage         : /api/lookup?mobile=9999999891           ║
-╚════════════════════════════════════════════════════════════╝
-    `.trim();
-
-    return res.status(400).send(JSON.stringify({
+    return res.status(400).json({
       status: false,
-      output: errorReport
-    }, null, 2));
+      error: {
+        creator: "KaluaApiAdmin",
+        channel: "@KaluaApiStore",
+        message: "Mobile parameter missing. Example: /api/lookup?mobile=9999999891"
+      }
+    });
   }
 
   const cleanNumber = String(mobile).replace(/\D/g, '');
   if (cleanNumber.length < 10) {
-    const errorReport = `
-╔════════════════════════════════════════════════════════════╗
-║                    ❌ K-TRACE ERROR LOG                    ║
-╠════════════════════════════════════════════════════════════╣
-║ 👑 Creator       : KaluaApiAdmin                           ║
-║ 📢 Channel       : @KaluaApiStore                          ║
-║ ⚠️ Status        : FAILED                                  ║
-║ 💬 Message       : Invalid format! Minimum 10 digits.      ║
-╚════════════════════════════════════════════════════════════╝
-    `.trim();
-
-    return res.status(400).send(JSON.stringify({
+    return res.status(400).json({
       status: false,
-      output: errorReport
-    }, null, 2));
+      error: {
+        creator: "KaluaApiAdmin",
+        channel: "@KaluaApiStore",
+        message: "Invalid format. Minimum 10 digits required."
+      }
+    });
   }
 
   try {
@@ -83,60 +64,42 @@ module.exports = async (req, res) => {
       }
     }
 
-    const reportText = `
-╔════════════════════════════════════════════════════════════╗
-║                    🚀 K-TRACE INTEL REPORT                 ║
-╠════════════════════════════════════════════════════════════╣
-║ 👑 Creator       : KaluaApiAdmin                           ║
-║ 📢 Channel       : @KaluaApiStore                          ║
-║ 🎯 Target Number : ${cleanNumber}                          ║
-╚════════════════════════════════════════════════════════════╝
-
-👤 [ PERSONAL IDENTITY DETAILS ]
---------------------------------------------------------------
- 🏷️ Name           : ${name}
- 👨‍👦 Father Name     : ${fname}
- 🆔 Unique ID       : ${id}
-
-📞 [ COMMUNICATION & NETWORK ]
---------------------------------------------------------------
- 📱 Primary Number  : ${cleanNumber}
- ☎️ Alternate Num   : ${altNum}
- 📧 Email Address   : ${email}
- 📡 Telecom Circle  : ${circle}
-
-📍 [ GEOGRAPHICAL ADDRESS BREAKDOWN ]
---------------------------------------------------------------
- 🏠 Full Location   : ${locationDetails}
- 🗺️ State           : ${state}
- 📮 Pincode         : ${pincode}
-
-══════════════════════════════════════════════════════════════
- 🔒 SECURED & POWERED BY K-TRACE ( KALUA X ADITYA )
-══════════════════════════════════════════════════════════════
-    `.trim();
-
-    return res.status(200).send(JSON.stringify({
+    const responseData = {
       status: true,
-      report: reportText
-    }, null, 2));
+      meta: {
+        creator: "KaluaApiAdmin",
+        channel: "@KaluaApiStore",
+        target: cleanNumber
+      },
+      personal_identity: {
+        name: name,
+        father_name: fname,
+        unique_id: id
+      },
+      communication_network: {
+        primary_number: cleanNumber,
+        alternate_number: altNum,
+        email: email,
+        telecom_circle: circle
+      },
+      geographical_address: {
+        full_location: locationDetails,
+        state: state,
+        pincode: pincode
+      }
+    };
+
+    return res.status(200).json(responseData);
 
   } catch (error) {
-    const crashReport = `
-╔════════════════════════════════════════════════════════════╗
-║                   🔥 SYSTEM CRASH REPORT                   ║
-╠════════════════════════════════════════════════════════════╣
-║ 👑 Creator       : KaluaApiAdmin                           ║
-║ 📢 Channel       : @KaluaApiStore                          ║
-║ ⚠️ Status        : ERROR                                   ║
-║ 💬 Details       : Upstream timeout or connection failed.  ║
-║ 🛠️ Error Info    : ${error.message}                        ║
-╚════════════════════════════════════════════════════════════╝
-    `.trim();
-
-    return res.status(500).send(JSON.stringify({
+    return res.status(500).json({
       status: false,
-      report: crashReport
-    }, null, 2));
+      error: {
+        creator: "KaluaApiAdmin",
+        channel: "@KaluaApiStore",
+        message: "Upstream server timeout or error.",
+        details: error.message
+      }
+    });
   }
 };
