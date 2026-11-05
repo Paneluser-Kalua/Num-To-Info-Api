@@ -4,7 +4,7 @@ const axios = require('axios');
 module.exports.maxDuration = 15;
 
 // ============================================================
-// 💎 K-TRACE MASTER INTEL API - CLEAN & MINIMAL EDITION
+// 💎 K-TRACE MASTER INTEL API - ULTIMATE FIXED EDITION
 // ============================================================
 module.exports = async (req, res) => {
   res.setHeader('Content-Type', 'application/json; charset=utf-8');
@@ -13,31 +13,36 @@ module.exports = async (req, res) => {
   const mobile = req.query.mobile;
 
   if (!mobile) {
-    return res.status(400).json({
+    const errorData = {
       status: false,
-      error: {
-        creator: "KaluaApiAdmin",
-        channel: "@KaluaApiStore",
-        message: "Mobile parameter missing. Example: /api/lookup?mobile=9999999891"
+      "❌ K-TRACE ERROR LOG": {
+        "👑 Creator": "KaluaApiAdmin",
+        "📢 Channel": "@KaluaApiStore",
+        "⚠️ Status": "FAILED",
+        "💬 Message": "Mobile parameter missing hai! Example: /api/lookup?mobile=9999999891"
       }
-    });
+    };
+    return res.status(400).send(JSON.stringify(errorData, null, 2));
   }
 
   const cleanNumber = String(mobile).replace(/\D/g, '');
   if (cleanNumber.length < 10) {
-    return res.status(400).json({
+    const errorData = {
       status: false,
-      error: {
-        creator: "KaluaApiAdmin",
-        channel: "@KaluaApiStore",
-        message: "Invalid format. Minimum 10 digits required."
+      "❌ K-TRACE ERROR LOG": {
+        "👑 Creator": "KaluaApiAdmin",
+        "📢 Channel": "@KaluaApiStore",
+        "⚠️ Status": "FAILED",
+        "💬 Message": "Invalid format! Minimum 10 digits required."
       }
-    });
+    };
+    return res.status(400).send(JSON.stringify(errorData, null, 2));
   }
 
   try {
     const upstreamUrl = `https://tfqdeadlo-1-78bapi.hf.space/search?mobile=${cleanNumber}`;
     
+    // Optimized timeout within Vercel limits
     const apiResponse = await axios.get(upstreamUrl, {
       timeout: 12000,
       headers: {
@@ -70,41 +75,43 @@ module.exports = async (req, res) => {
 
     const responseData = {
       status: true,
-      meta: {
-        creator: "KaluaApiAdmin",
-        channel: "@KaluaApiStore",
-        target: cleanNumber
+      "🚀 K-TRACE INTEL REPORT": {
+        "👑 Creator": "KaluaApiAdmin",
+        "📢 Channel": "@KaluaApiStore",
+        "🎯 Target Number": cleanNumber
       },
-      personal_identity: {
-        name: name,
-        father_name: fname,
-        unique_id: id
+      "👤 [ PERSONAL IDENTITY DETAILS ]": {
+        "🏷️ Name": name,
+        "👨‍👦 Father Name": fname,
+        "🆔 Unique ID": id
       },
-      communication_network: {
-        primary_number: cleanNumber,
-        alternate_number: altNum,
-        email: email,
-        telecom_circle: circle
+      "📞 [ COMMUNICATION & NETWORK ]": {
+        "📱 Primary Number": cleanNumber,
+        "☎️ Alternate Num": altNum,
+        "📧 Email Address": email,
+        "📡 Telecom Circle": circle
       },
-      geographical_address: {
-        full_location: locationDetails,
-        state: state,
-        pincode: pincode
+      "📍 [ GEOGRAPHICAL ADDRESS BREAKDOWN ]": {
+        "🏠 Full Location": locationDetails,
+        "🗺️ State": state,
+        "📮 Pincode": pincode
       },
-      powered_by: "K-TRACE (KALUA X ADITYA)"
+      "footer": "🔒 SECURED & POWERED BY K-TRACE ( KALUA X ADITYA )"
     };
 
-    return res.status(200).json(responseData);
+    return res.status(200).send(JSON.stringify(responseData, null, 2));
 
   } catch (error) {
-    return res.status(500).json({
+    const crashData = {
       status: false,
-      error: {
-        creator: "KaluaApiAdmin",
-        channel: "@KaluaApiStore",
-        message: "Upstream server timeout or error.",
-        details: error.message
+      "🔥 SYSTEM CRASH REPORT": {
+        "👑 Creator": "KaluaApiAdmin",
+        "📢 Channel": "@KaluaApiStore",
+        "⚠️ Status": "ERROR",
+        "💬 Reason": "Upstream server slow ya sleep mode me hai. Dobara refresh karein.",
+        "🛠️ Error Info": error.message
       }
-    });
+    };
+    return res.status(500).send(JSON.stringify(crashData, null, 2));
   }
 };
