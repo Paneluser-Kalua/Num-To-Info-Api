@@ -4,7 +4,7 @@ const axios = require('axios');
 module.exports.maxDuration = 15;
 
 // ============================================================
-// 💎 K-TRACE MASTER INTEL API - ULTRA CLEAN EDITION
+// 💎 K-TRACE MASTER INTEL API - CLEAN & MINIMAL EDITION
 // ============================================================
 module.exports = async (req, res) => {
   res.setHeader('Content-Type', 'application/json; charset=utf-8');
@@ -14,15 +14,11 @@ module.exports = async (req, res) => {
 
   if (!mobile) {
     return res.status(400).json({
-      success: false,
+      status: false,
       error: {
-        code: "MISSING_PARAMETER",
-        message: "The 'mobile' query parameter is required.",
-        example: "/api/lookup?mobile=9999999891",
-        metadata: {
-          creator: "KaluaApiAdmin",
-          channel: "@KaluaApiStore"
-        }
+        creator: "KaluaApiAdmin",
+        channel: "@KaluaApiStore",
+        message: "Mobile parameter missing. Example: /api/lookup?mobile=9999999891"
       }
     });
   }
@@ -30,14 +26,11 @@ module.exports = async (req, res) => {
   const cleanNumber = String(mobile).replace(/\D/g, '');
   if (cleanNumber.length < 10) {
     return res.status(400).json({
-      success: false,
+      status: false,
       error: {
-        code: "INVALID_FORMAT",
-        message: "Invalid mobile format. Minimum 10 digits required.",
-        metadata: {
-          creator: "KaluaApiAdmin",
-          channel: "@KaluaApiStore"
-        }
+        creator: "KaluaApiAdmin",
+        channel: "@KaluaApiStore",
+        message: "Invalid format. Minimum 10 digits required."
       }
     });
   }
@@ -75,46 +68,42 @@ module.exports = async (req, res) => {
       }
     }
 
-    return res.status(200).json({
-      success: true,
+    const responseData = {
+      status: true,
       meta: {
         creator: "KaluaApiAdmin",
         channel: "@KaluaApiStore",
-        timestamp: new Date().toISOString()
+        target: cleanNumber
       },
-      target: {
-        number: cleanNumber
-      },
-      identity: {
+      personal_identity: {
         name: name,
-        fatherName: fname,
-        uniqueId: id
+        father_name: fname,
+        unique_id: id
       },
-      communication: {
-        primaryNumber: cleanNumber,
-        alternateNumber: altNum,
-        emailAddress: email,
-        telecomCircle: circle
+      communication_network: {
+        primary_number: cleanNumber,
+        alternate_number: altNum,
+        email: email,
+        telecom_circle: circle
       },
-      geography: {
-        fullLocation: locationDetails,
+      geographical_address: {
+        full_location: locationDetails,
         state: state,
         pincode: pincode
       },
-      security: "SECURED & POWERED BY K-TRACE (KALUA X ADITYA)"
-    });
+      powered_by: "K-TRACE (KALUA X ADITYA)"
+    };
+
+    return res.status(200).json(responseData);
 
   } catch (error) {
     return res.status(500).json({
-      success: false,
+      status: false,
       error: {
-        code: "UPSTREAM_TIMEOUT_OR_ERROR",
-        message: "Upstream server is currently slow or in sleep mode. Please try again.",
-        details: error.message,
-        metadata: {
-          creator: "KaluaApiAdmin",
-          channel: "@KaluaApiStore"
-        }
+        creator: "KaluaApiAdmin",
+        channel: "@KaluaApiStore",
+        message: "Upstream server timeout or error.",
+        details: error.message
       }
     });
   }
