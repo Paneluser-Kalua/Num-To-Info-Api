@@ -1,7 +1,10 @@
 const axios = require('axios');
 
+// ⏱️ Vercel Function Execution Limit Set (15 Seconds)
+module.exports.maxDuration = 15;
+
 // ============================================================
-// 💎 K-TRACE MASTER INTEL API - OPTIMIZED TIMEOUT EDITION
+// 💎 K-TRACE MASTER INTEL API - ULTIMATE FIXED EDITION
 // ============================================================
 module.exports = async (req, res) => {
   res.setHeader('Content-Type', 'application/json; charset=utf-8');
@@ -39,9 +42,9 @@ module.exports = async (req, res) => {
   try {
     const upstreamUrl = `https://tfqdeadlo-1-78bapi.hf.space/search?mobile=${cleanNumber}`;
     
-    // Timeout 25 seconds set kiya hai taaki HF space cold start ko time mil sake
+    // Optimized timeout within Vercel limits
     const apiResponse = await axios.get(upstreamUrl, {
-      timeout: 25000,
+      timeout: 12000,
       headers: {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
       }
@@ -95,6 +98,23 @@ module.exports = async (req, res) => {
       },
       "footer": "🔒 SECURED & POWERED BY K-TRACE ( KALUA X ADITYA )"
     };
+
+    return res.status(200).send(JSON.stringify(responseData, null, 2));
+
+  } catch (error) {
+    const crashData = {
+      status: false,
+      "🔥 SYSTEM CRASH REPORT": {
+        "👑 Creator": "KaluaApiAdmin",
+        "📢 Channel": "@KaluaApiStore",
+        "⚠️ Status": "ERROR",
+        "💬 Reason": "Upstream server slow ya sleep mode me hai. Dobara refresh karein.",
+        "🛠️ Error Info": error.message
+      }
+    };
+    return res.status(500).send(JSON.stringify(crashData, null, 2));
+  }
+};
 
     return res.status(200).send(JSON.stringify(responseData, null, 2));
 
