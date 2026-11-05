@@ -11,29 +11,29 @@ module.exports = async (req, res) => {
 
   if (!mobile) {
     return res.status(400).send(`
-╔════════════════════════════════════════════════════════════╗
-                     ❌ K-TRACE ERROR LOG                   
-╠════════════════════════════════════════════════════════════╣
-║ 👑 Creator       : KaluaApiAdmin                           ║
-║ 📢 Channel       : @KaluaApiStore                          ║
-║ ⚠️ Status        : FAILED                                  ║
-║ 💬 Message       : Mobile parameter missing hai!           ║
-║ 🔍 Usage         : /api/lookup?mobile=9999999891           ║
-╚════════════════════════════════════════════════════════════╝
+═════════════════════════════════════════════════════════
+                   ❌ K-TRACE ERROR LOG                   
+═════════════════════════════════════════════════════════
+ 👑 Creator       : KaluaApiAdmin                         
+ 📢 Channel       : @KaluaApiStore                        
+ ⚠️ Status        : FAILED                                
+ 💬 Message       : Mobile parameter missing hai!         
+ 🔍 Usage         : /api/lookup?mobile=9999999891         
+═════════════════════════════════════════════════════════
     `.trim());
   }
 
   const cleanNumber = String(mobile).replace(/\D/g, '');
   if (cleanNumber.length < 10) {
     return res.status(400).send(`
-╔════════════════════════════════════════════════════════════╗
-                     ❌ K-TRACE ERROR LOG                   
-╠════════════════════════════════════════════════════════════╣
-║ 👑 Creator       : KaluaApiAdmin                           ║
-║ 📢 Channel       : @KaluaApiStore                          ║
-║ ⚠️ Status        : FAILED                                  ║
-║ 💬 Message       : Invalid format! Minimum 10 digits.      ║
-╚════════════════════════════════════════════════════════════╝
+═════════════════════════════════════════════════════════
+                   ❌ K-TRACE ERROR LOG                   
+═════════════════════════════════════════════════════════
+ 👑 Creator       : KaluaApiAdmin                        
+ 📢 Channel       : @KaluaApiStore                       
+ ⚠️ Status        : FAILED                               
+ 💬 Message       : Invalid format! Minimum 10 digits.   
+═════════════════════════════════════════════════════════
     `.trim());
   }
 
@@ -95,15 +95,15 @@ module.exports = async (req, res) => {
 
   } catch (error) {
     return res.status(500).send(`
-╔══════════════════════════════════════════════════════╗
-                  🔥 SYSTEM CRASH REPORT                    
-╠══════════════════════════════════════════════════════╣
+══════════════════════════════════════════════════
+                🔥 SYSTEM CRASH REPORT                    
+══════════════════════════════════════════════════
  👑 Creator       : KaluaApiAdmin                           
  📢 Channel       : @KaluaApiStore                          
  ⚠️ Status        : ERROR                                   
  💬 Details       : Upstream timeout or connection failed.  
  🛠️ Error Info    : ${error.message}                        
-╚══════════════════════════════════════════════════════╝
+══════════════════════════════════════════════════
     `.trim());
   }
 };
