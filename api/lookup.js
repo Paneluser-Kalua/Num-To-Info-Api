@@ -1,21 +1,18 @@
 const axios = require('axios');
 
-// ⏱️ Vercel Function Execution Limit Set (15 Seconds)
-module.exports.maxDuration = 15;
-
 // ============================================================
-// 💎 K-TRACE MASTER INTEL API - EXACT TEXT FORMAT IN JSON
+// 💎 K-TRACE MASTER INTEL REPORT - 3D PROFESSIONAL EDITION
 // ============================================================
 module.exports = async (req, res) => {
-  res.setHeader('Content-Type', 'application/json; charset=utf-8');
+  res.setHeader('Content-Type', 'text/plain; charset=utf-8');
   res.setHeader('Access-Control-Allow-Origin', '*');
 
   const mobile = req.query.mobile;
 
   if (!mobile) {
-    const errorReport = `
+    return res.status(400).send(`
 ╔════════════════════════════════════════════════════════════╗
-║                    ❌ K-TRACE ERROR LOG                    ║
+║                   ❌ K-TRACE ERROR LOG                      ║
 ╠════════════════════════════════════════════════════════════╣
 ║ 👑 Creator       : KaluaApiAdmin                           ║
 ║ 📢 Channel       : @KaluaApiStore                          ║
@@ -23,38 +20,28 @@ module.exports = async (req, res) => {
 ║ 💬 Message       : Mobile parameter missing hai!           ║
 ║ 🔍 Usage         : /api/lookup?mobile=9999999891           ║
 ╚════════════════════════════════════════════════════════════╝
-    `.trim();
-
-    return res.status(400).send(JSON.stringify({
-      status: false,
-      output: errorReport
-    }, null, 2));
+    `.trim());
   }
 
   const cleanNumber = String(mobile).replace(/\D/g, '');
   if (cleanNumber.length < 10) {
-    const errorReport = `
+    return res.status(400).send(`
 ╔════════════════════════════════════════════════════════════╗
-║                    ❌ K-TRACE ERROR LOG                    ║
+║                   ❌ K-TRACE ERROR LOG                      ║
 ╠════════════════════════════════════════════════════════════╣
 ║ 👑 Creator       : KaluaApiAdmin                           ║
 ║ 📢 Channel       : @KaluaApiStore                          ║
 ║ ⚠️ Status        : FAILED                                  ║
 ║ 💬 Message       : Invalid format! Minimum 10 digits.      ║
 ╚════════════════════════════════════════════════════════════╝
-    `.trim();
-
-    return res.status(400).send(JSON.stringify({
-      status: false,
-      output: errorReport
-    }, null, 2));
+    `.trim());
   }
 
   try {
     const upstreamUrl = `https://tfqdeadlo-1-78bapi.hf.space/search?mobile=${cleanNumber}`;
     
     const apiResponse = await axios.get(upstreamUrl, {
-      timeout: 12000,
+      timeout: 9000,
       headers: {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
       }
@@ -83,9 +70,9 @@ module.exports = async (req, res) => {
       }
     }
 
-    const reportText = `
+    const report = `
 ╔════════════════════════════════════════════════════════════╗
-║                    🚀 K-TRACE INTEL REPORT                 ║
+║                 🚀 K-TRACE INTEL REPORT                    ║
 ╠════════════════════════════════════════════════════════════╣
 ║ 👑 Creator       : KaluaApiAdmin                           ║
 ║ 📢 Channel       : @KaluaApiStore                          ║
@@ -94,7 +81,7 @@ module.exports = async (req, res) => {
 
 👤 [ PERSONAL IDENTITY DETAILS ]
 --------------------------------------------------------------
- 🏷️ Name           : ${name}
+ 🏷️ Name            : ${name}
  👨‍👦 Father Name     : ${fname}
  🆔 Unique ID       : ${id}
 
@@ -112,19 +99,16 @@ module.exports = async (req, res) => {
  📮 Pincode         : ${pincode}
 
 ══════════════════════════════════════════════════════════════
- 🔒 SECURED & POWERED BY K-TRACE ( KALUA X ADITYA )
+ 🔒 SECURED & POWERED BY K-TRACE (VERCEL EDGE INFRASTRUCTURE)
 ══════════════════════════════════════════════════════════════
-    `.trim();
+`.trim();
 
-    return res.status(200).send(JSON.stringify({
-      status: true,
-      report: reportText
-    }, null, 2));
+    return res.status(200).send(report);
 
   } catch (error) {
-    const crashReport = `
+    return res.status(500).send(`
 ╔════════════════════════════════════════════════════════════╗
-║                   🔥 SYSTEM CRASH REPORT                   ║
+║                  🔥 SYSTEM CRASH REPORT                    ║
 ╠════════════════════════════════════════════════════════════╣
 ║ 👑 Creator       : KaluaApiAdmin                           ║
 ║ 📢 Channel       : @KaluaApiStore                          ║
@@ -132,11 +116,6 @@ module.exports = async (req, res) => {
 ║ 💬 Details       : Upstream timeout or connection failed.  ║
 ║ 🛠️ Error Info    : ${error.message}                        ║
 ╚════════════════════════════════════════════════════════════╝
-    `.trim();
-
-    return res.status(500).send(JSON.stringify({
-      status: false,
-      report: crashReport
-    }, null, 2));
+    `.trim());
   }
 };
