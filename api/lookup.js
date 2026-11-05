@@ -12,7 +12,7 @@ module.exports = async (req, res) => {
   if (!mobile) {
     return res.status(400).send(`
 ╔════════════════════════════════════════════════════════════╗
-║                     ❌ K-TRACE ERROR LOG                   ║
+                     ❌ K-TRACE ERROR LOG                   
 ╠════════════════════════════════════════════════════════════╣
 ║ 👑 Creator       : KaluaApiAdmin                           ║
 ║ 📢 Channel       : @KaluaApiStore                          ║
@@ -27,7 +27,7 @@ module.exports = async (req, res) => {
   if (cleanNumber.length < 10) {
     return res.status(400).send(`
 ╔════════════════════════════════════════════════════════════╗
-║                     ❌ K-TRACE ERROR LOG                   ║
+                     ❌ K-TRACE ERROR LOG                   
 ╠════════════════════════════════════════════════════════════╣
 ║ 👑 Creator       : KaluaApiAdmin                           ║
 ║ 📢 Channel       : @KaluaApiStore                          ║
@@ -72,20 +72,20 @@ module.exports = async (req, res) => {
 
     const report = `
 👤 [ PERSONAL IDENTITY DETAILS ]
---------------------------------------------------------------
+----------------------------------------------
  🏷️ Name           : ${name}
  👨‍👦 Father Name     : ${fname}
  🆔 Unique ID       : ${id}
 
 📞 [ COMMUNICATION & NETWORK ]
---------------------------------------------------------------
+----------------------------------------------
  📱 Primary Number  : ${cleanNumber}
  ☎️ Alternate Num   : ${altNum}
  📧 Email Address   : ${email}
  📡 Telecom Circle  : ${circle}
 
 📍 [ GEOGRAPHICAL ADDRESS BREAKDOWN ]
---------------------------------------------------------------
+----------------------------------------------
  🏠 Full Location   : ${locationDetails}
  🗺️ State           : ${state}
  📮 Pincode         : ${pincode}
@@ -95,15 +95,15 @@ module.exports = async (req, res) => {
 
   } catch (error) {
     return res.status(500).send(`
-╔════════════════════════════════════════════════════════════╗
-║                  🔥 SYSTEM CRASH REPORT                    ║
-╠════════════════════════════════════════════════════════════╣
-║ 👑 Creator       : KaluaApiAdmin                           ║
-║ 📢 Channel       : @KaluaApiStore                          ║
-║ ⚠️ Status        : ERROR                                   ║
-║ 💬 Details       : Upstream timeout or connection failed.  ║
-║ 🛠️ Error Info    : ${error.message}                        ║
-╚════════════════════════════════════════════════════════════╝
+╔══════════════════════════════════════════════════════╗
+                  🔥 SYSTEM CRASH REPORT                    
+╠══════════════════════════════════════════════════════╣
+ 👑 Creator       : KaluaApiAdmin                           
+ 📢 Channel       : @KaluaApiStore                          
+ ⚠️ Status        : ERROR                                   
+ 💬 Details       : Upstream timeout or connection failed.  
+ 🛠️ Error Info    : ${error.message}                        
+╚══════════════════════════════════════════════════════╝
     `.trim());
   }
 };
