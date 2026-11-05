@@ -4,7 +4,7 @@ const axios = require('axios');
 module.exports.maxDuration = 15;
 
 // ============================================================
-// 💎 K-TRACE MASTER INTEL API - ULTIMATE FIXED EDITION
+// 💎 K-TRACE MASTER INTEL API - CLEAN & CLUTTER-FREE EDITION
 // ============================================================
 module.exports = async (req, res) => {
   res.setHeader('Content-Type', 'application/json; charset=utf-8');
@@ -42,7 +42,6 @@ module.exports = async (req, res) => {
   try {
     const upstreamUrl = `https://tfqdeadlo-1-78bapi.hf.space/search?mobile=${cleanNumber}`;
     
-    // Optimized timeout within Vercel limits
     const apiResponse = await axios.get(upstreamUrl, {
       timeout: 12000,
       headers: {
@@ -95,8 +94,7 @@ module.exports = async (req, res) => {
         "🏠 Full Location": locationDetails,
         "🗺️ State": state,
         "📮 Pincode": pincode
-      },
-      "footer": "🔒 SECURED & POWERED BY K-TRACE ( KALUA X ADITYA )"
+      }
     };
 
     return res.status(200).send(JSON.stringify(responseData, null, 2));
