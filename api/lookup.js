@@ -12,7 +12,7 @@ module.exports = async (req, res) => {
   if (!mobile) {
     return res.status(400).send(`
 ╔════════════════════════════════════════════════════════════╗
-║                   ❌ K-TRACE ERROR LOG                      ║
+║                     ❌ K-TRACE ERROR LOG                   ║
 ╠════════════════════════════════════════════════════════════╣
 ║ 👑 Creator       : KaluaApiAdmin                           ║
 ║ 📢 Channel       : @KaluaApiStore                          ║
@@ -27,7 +27,7 @@ module.exports = async (req, res) => {
   if (cleanNumber.length < 10) {
     return res.status(400).send(`
 ╔════════════════════════════════════════════════════════════╗
-║                   ❌ K-TRACE ERROR LOG                      ║
+║                     ❌ K-TRACE ERROR LOG                   ║
 ╠════════════════════════════════════════════════════════════╣
 ║ 👑 Creator       : KaluaApiAdmin                           ║
 ║ 📢 Channel       : @KaluaApiStore                          ║
@@ -71,17 +71,9 @@ module.exports = async (req, res) => {
     }
 
     const report = `
-╔════════════════════════════════════════════════════════════╗
-║                 🚀 K-TRACE INTEL REPORT                    ║
-╠════════════════════════════════════════════════════════════╣
-║ 👑 Creator       : KaluaApiAdmin                           ║
-║ 📢 Channel       : @KaluaApiStore                          ║
-║ 🎯 Target Number : ${cleanNumber}                          ║
-╚════════════════════════════════════════════════════════════╝
-
 👤 [ PERSONAL IDENTITY DETAILS ]
 --------------------------------------------------------------
- 🏷️ Name            : ${name}
+ 🏷️ Name           : ${name}
  👨‍👦 Father Name     : ${fname}
  🆔 Unique ID       : ${id}
 
@@ -97,11 +89,7 @@ module.exports = async (req, res) => {
  🏠 Full Location   : ${locationDetails}
  🗺️ State           : ${state}
  📮 Pincode         : ${pincode}
-
-══════════════════════════════════════════════════════════════
- 🔒 SECURED & POWERED BY K-TRACE (VERCEL EDGE INFRASTRUCTURE)
-══════════════════════════════════════════════════════════════
-`.trim();
+    `.trim();
 
     return res.status(200).send(report);
 
