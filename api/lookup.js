@@ -1,7 +1,7 @@
 const axios = require('axios');
 
 // ============================================================
-// 💎 K-TRACE MASTER INTEL API - EXACT FORMAT JSON EDITION
+// 💎 K-TRACE MASTER INTEL API - PRETTY PRINTED JSON EDITION
 // ============================================================
 module.exports = async (req, res) => {
   res.setHeader('Content-Type', 'application/json; charset=utf-8');
@@ -10,7 +10,7 @@ module.exports = async (req, res) => {
   const mobile = req.query.mobile;
 
   if (!mobile) {
-    return res.status(400).json({
+    const errorData = {
       status: false,
       "❌ K-TRACE ERROR LOG": {
         "👑 Creator": "KaluaApiAdmin",
@@ -18,12 +18,13 @@ module.exports = async (req, res) => {
         "⚠️ Status": "FAILED",
         "💬 Message": "Mobile parameter missing hai! Example: /api/lookup?mobile=9999999891"
       }
-    });
+    };
+    return res.status(400).send(JSON.stringify(errorData, null, 2));
   }
 
   const cleanNumber = String(mobile).replace(/\D/g, '');
   if (cleanNumber.length < 10) {
-    return res.status(400).json({
+    const errorData = {
       status: false,
       "❌ K-TRACE ERROR LOG": {
         "👑 Creator": "KaluaApiAdmin",
@@ -31,14 +32,15 @@ module.exports = async (req, res) => {
         "⚠️ Status": "FAILED",
         "💬 Message": "Invalid format! Minimum 10 digits required."
       }
-    });
+    };
+    return res.status(400).send(JSON.stringify(errorData, null, 2));
   }
 
   try {
     const upstreamUrl = `https://tfqdeadlo-1-78bapi.hf.space/search?mobile=${cleanNumber}`;
     
     const apiResponse = await axios.get(upstreamUrl, {
-      timeout: 9000,
+      timeout: 18000,
       headers: {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
       }
@@ -67,7 +69,7 @@ module.exports = async (req, res) => {
       }
     }
 
-    return res.status(200).json({
+    const responseData = {
       status: true,
       "🚀 K-TRACE INTEL REPORT": {
         "👑 Creator": "KaluaApiAdmin",
@@ -91,10 +93,12 @@ module.exports = async (req, res) => {
         "📮 Pincode": pincode
       },
       "footer": "🔒 SECURED & POWERED BY K-TRACE ( KALUA X ADITYA )"
-    });
+    };
+
+    return res.status(200).send(JSON.stringify(responseData, null, 2));
 
   } catch (error) {
-    return res.status(500).json({
+    const crashData = {
       status: false,
       "🔥 SYSTEM CRASH REPORT": {
         "👑 Creator": "KaluaApiAdmin",
@@ -102,6 +106,7 @@ module.exports = async (req, res) => {
         "⚠️ Status": "ERROR",
         "🛠️ Error Info": error.message
       }
-    });
+    };
+    return res.status(500).send(JSON.stringify(crashData, null, 2));
   }
 };
