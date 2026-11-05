@@ -1,7 +1,7 @@
 const axios = require('axios');
 
 // ============================================================
-// 💎 K-TRACE MASTER INTEL REPORT - 3D PROFESSIONAL EDITION
+// 💎 K-TRACE MASTER INTEL REPORT - TELEGRAM COMPACT EDITION
 // ============================================================
 module.exports = async (req, res) => {
   res.setHeader('Content-Type', 'text/plain; charset=utf-8');
@@ -10,31 +10,12 @@ module.exports = async (req, res) => {
   const mobile = req.query.mobile;
 
   if (!mobile) {
-    return res.status(400).send(`
-═════════════════════════════════════════════════════════
-                   ❌ K-TRACE ERROR LOG                   
-═════════════════════════════════════════════════════════
- 👑 Creator       : KaluaApiAdmin                         
- 📢 Channel       : @KaluaApiStore                        
- ⚠️ Status        : FAILED                                
- 💬 Message       : Mobile parameter missing hai!         
- 🔍 Usage         : /api/lookup?mobile=9999999891         
-═════════════════════════════════════════════════════════
-    `.trim());
+    return res.status(400).send(`❌ *K-TRACE ERROR*\n\n⚠️ Status: FAILED\n💬 Message: Mobile parameter missing hai!\n🔍 Usage: \`/api/lookup?mobile=9999999891\``);
   }
 
   const cleanNumber = String(mobile).replace(/\D/g, '');
   if (cleanNumber.length < 10) {
-    return res.status(400).send(`
-═════════════════════════════════════════════════════════
-                   ❌ K-TRACE ERROR LOG                   
-═════════════════════════════════════════════════════════
- 👑 Creator       : KaluaApiAdmin                        
- 📢 Channel       : @KaluaApiStore                       
- ⚠️ Status        : FAILED                               
- 💬 Message       : Invalid format! Minimum 10 digits.   
-═════════════════════════════════════════════════════════
-    `.trim());
+    return res.status(400).send(`❌ *K-TRACE ERROR*\n\n⚠️ Status: FAILED\n💬 Message: Invalid format! Minimum 10 digits required.`);
   }
 
   try {
@@ -71,39 +52,26 @@ module.exports = async (req, res) => {
     }
 
     const report = `
-👤 [ PERSONAL IDENTITY DETAILS ]
-----------------------------------------------
- 🏷️ Name           : ${name}
- 👨‍👦 Father Name     : ${fname}
- 🆔 Unique ID       : ${id}
+👤 *PERSONAL IDENTITY*
+├ 🏷️ *Name:* ${name}
+├ 👨‍👦 *Father:* ${fname}
+└ 🆔 *ID:* ${id}
 
-📞 [ COMMUNICATION & NETWORK ]
-----------------------------------------------
- 📱 Primary Number  : ${cleanNumber}
- ☎️ Alternate Num   : ${altNum}
- 📧 Email Address   : ${email}
- 📡 Telecom Circle  : ${circle}
+📞 *COMMUNICATION & NETWORK*
+├ 📱 *Primary:* ${cleanNumber}
+├ ☎️ *Alternate:* ${altNum}
+├ 📧 *Email:* ${email}
+└ 📡 *Circle:* ${circle}
 
-📍 [ GEOGRAPHICAL ADDRESS BREAKDOWN ]
-----------------------------------------------
- 🏠 Full Location   : ${locationDetails}
- 🗺️ State           : ${state}
- 📮 Pincode         : ${pincode}
+📍 *LOCATION DETAILS*
+├ 🏠 *Address:* ${locationDetails}
+├ 🗺️ *State:* ${state}
+└ 📮 *Pincode:* ${pincode}
     `.trim();
 
     return res.status(200).send(report);
 
   } catch (error) {
-    return res.status(500).send(`
-══════════════════════════════════════════════════
-                🔥 SYSTEM CRASH REPORT                    
-══════════════════════════════════════════════════
- 👑 Creator       : KaluaApiAdmin                           
- 📢 Channel       : @KaluaApiStore                          
- ⚠️ Status        : ERROR                                   
- 💬 Details       : Upstream timeout or connection failed.  
- 🛠️ Error Info    : ${error.message}                        
-══════════════════════════════════════════════════
-    `.trim());
+    return res.status(500).send(`🔥 *SYSTEM ERROR*\n\n⚠️ Connection Failed\n🛠️ Details: ${error.message}`);
   }
 };
