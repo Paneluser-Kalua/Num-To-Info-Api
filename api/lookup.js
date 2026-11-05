@@ -1,7 +1,7 @@
 const axios = require('axios');
 
 // ============================================================
-// 💎 K-TRACE MASTER INTEL API - PRETTY PRINTED JSON EDITION
+// 💎 K-TRACE MASTER INTEL API - OPTIMIZED TIMEOUT EDITION
 // ============================================================
 module.exports = async (req, res) => {
   res.setHeader('Content-Type', 'application/json; charset=utf-8');
@@ -39,8 +39,9 @@ module.exports = async (req, res) => {
   try {
     const upstreamUrl = `https://tfqdeadlo-1-78bapi.hf.space/search?mobile=${cleanNumber}`;
     
+    // Timeout 25 seconds set kiya hai taaki HF space cold start ko time mil sake
     const apiResponse = await axios.get(upstreamUrl, {
-      timeout: 18000,
+      timeout: 25000,
       headers: {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
       }
@@ -104,6 +105,7 @@ module.exports = async (req, res) => {
         "👑 Creator": "KaluaApiAdmin",
         "📢 Channel": "@KaluaApiStore",
         "⚠️ Status": "ERROR",
+        "💬 Reason": "Upstream Hugging Face space is sleeping or taking too long to respond.",
         "🛠️ Error Info": error.message
       }
     };
