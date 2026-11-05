@@ -4,7 +4,7 @@ const axios = require('axios');
 module.exports.maxDuration = 15;
 
 // ============================================================
-// 💎 K-TRACE MASTER INTEL API - CLEAN & CLUTTER-FREE EDITION
+// 💎 K-TRACE MASTER INTEL API - EXACT TEXT FORMAT IN JSON
 // ============================================================
 module.exports = async (req, res) => {
   res.setHeader('Content-Type', 'application/json; charset=utf-8');
@@ -13,30 +13,41 @@ module.exports = async (req, res) => {
   const mobile = req.query.mobile;
 
   if (!mobile) {
-    const errorData = {
+    const errorReport = `
+╔════════════════════════════════════════════════════════════╗
+║                    ❌ K-TRACE ERROR LOG                    ║
+╠════════════════════════════════════════════════════════════╣
+║ 👑 Creator       : KaluaApiAdmin                           ║
+║ 📢 Channel       : @KaluaApiStore                          ║
+║ ⚠️ Status        : FAILED                                  ║
+║ 💬 Message       : Mobile parameter missing hai!           ║
+║ 🔍 Usage         : /api/lookup?mobile=9999999891           ║
+╚════════════════════════════════════════════════════════════╝
+    `.trim();
+
+    return res.status(400).send(JSON.stringify({
       status: false,
-      "❌ K-TRACE ERROR LOG": {
-        "👑 Creator": "KaluaApiAdmin",
-        "📢 Channel": "@KaluaApiStore",
-        "⚠️ Status": "FAILED",
-        "💬 Message": "Mobile parameter missing hai! Example: /api/lookup?mobile=9999999891"
-      }
-    };
-    return res.status(400).send(JSON.stringify(errorData, null, 2));
+      output: errorReport
+    }, null, 2));
   }
 
   const cleanNumber = String(mobile).replace(/\D/g, '');
   if (cleanNumber.length < 10) {
-    const errorData = {
+    const errorReport = `
+╔════════════════════════════════════════════════════════════╗
+║                    ❌ K-TRACE ERROR LOG                    ║
+╠════════════════════════════════════════════════════════════╣
+║ 👑 Creator       : KaluaApiAdmin                           ║
+║ 📢 Channel       : @KaluaApiStore                          ║
+║ ⚠️ Status        : FAILED                                  ║
+║ 💬 Message       : Invalid format! Minimum 10 digits.      ║
+╚════════════════════════════════════════════════════════════╝
+    `.trim();
+
+    return res.status(400).send(JSON.stringify({
       status: false,
-      "❌ K-TRACE ERROR LOG": {
-        "👑 Creator": "KaluaApiAdmin",
-        "📢 Channel": "@KaluaApiStore",
-        "⚠️ Status": "FAILED",
-        "💬 Message": "Invalid format! Minimum 10 digits required."
-      }
-    };
-    return res.status(400).send(JSON.stringify(errorData, null, 2));
+      output: errorReport
+    }, null, 2));
   }
 
   try {
@@ -72,44 +83,60 @@ module.exports = async (req, res) => {
       }
     }
 
-    const responseData = {
-      status: true,
-      "🚀 K-TRACE INTEL REPORT": {
-        "👑 Creator": "KaluaApiAdmin",
-        "📢 Channel": "@KaluaApiStore",
-        "🎯 Target Number": cleanNumber
-      },
-      "👤 [ PERSONAL IDENTITY DETAILS ]": {
-        "🏷️ Name": name,
-        "👨‍👦 Father Name": fname,
-        "🆔 Unique ID": id
-      },
-      "📞 [ COMMUNICATION & NETWORK ]": {
-        "📱 Primary Number": cleanNumber,
-        "☎️ Alternate Num": altNum,
-        "📧 Email Address": email,
-        "📡 Telecom Circle": circle
-      },
-      "📍 [ GEOGRAPHICAL ADDRESS BREAKDOWN ]": {
-        "🏠 Full Location": locationDetails,
-        "🗺️ State": state,
-        "📮 Pincode": pincode
-      }
-    };
+    const reportText = `
+╔════════════════════════════════════════════════════════════╗
+║                    🚀 K-TRACE INTEL REPORT                 ║
+╠════════════════════════════════════════════════════════════╣
+║ 👑 Creator       : KaluaApiAdmin                           ║
+║ 📢 Channel       : @KaluaApiStore                          ║
+║ 🎯 Target Number : ${cleanNumber}                          ║
+╚════════════════════════════════════════════════════════════╝
 
-    return res.status(200).send(JSON.stringify(responseData, null, 2));
+👤 [ PERSONAL IDENTITY DETAILS ]
+--------------------------------------------------------------
+ 🏷️ Name           : ${name}
+ 👨‍👦 Father Name     : ${fname}
+ 🆔 Unique ID       : ${id}
+
+📞 [ COMMUNICATION & NETWORK ]
+--------------------------------------------------------------
+ 📱 Primary Number  : ${cleanNumber}
+ ☎️ Alternate Num   : ${altNum}
+ 📧 Email Address   : ${email}
+ 📡 Telecom Circle  : ${circle}
+
+📍 [ GEOGRAPHICAL ADDRESS BREAKDOWN ]
+--------------------------------------------------------------
+ 🏠 Full Location   : ${locationDetails}
+ 🗺️ State           : ${state}
+ 📮 Pincode         : ${pincode}
+
+══════════════════════════════════════════════════════════════
+ 🔒 SECURED & POWERED BY K-TRACE ( KALUA X ADITYA )
+══════════════════════════════════════════════════════════════
+    `.trim();
+
+    return res.status(200).send(JSON.stringify({
+      status: true,
+      report: reportText
+    }, null, 2));
 
   } catch (error) {
-    const crashData = {
+    const crashReport = `
+╔════════════════════════════════════════════════════════════╗
+║                   🔥 SYSTEM CRASH REPORT                   ║
+╠════════════════════════════════════════════════════════════╣
+║ 👑 Creator       : KaluaApiAdmin                           ║
+║ 📢 Channel       : @KaluaApiStore                          ║
+║ ⚠️ Status        : ERROR                                   ║
+║ 💬 Details       : Upstream timeout or connection failed.  ║
+║ 🛠️ Error Info    : ${error.message}                        ║
+╚════════════════════════════════════════════════════════════╝
+    `.trim();
+
+    return res.status(500).send(JSON.stringify({
       status: false,
-      "🔥 SYSTEM CRASH REPORT": {
-        "👑 Creator": "KaluaApiAdmin",
-        "📢 Channel": "@KaluaApiStore",
-        "⚠️ Status": "ERROR",
-        "💬 Reason": "Upstream server slow ya sleep mode me hai. Dobara refresh karein.",
-        "🛠️ Error Info": error.message
-      }
-    };
-    return res.status(500).send(JSON.stringify(crashData, null, 2));
+      report: crashReport
+    }, null, 2));
   }
 };
