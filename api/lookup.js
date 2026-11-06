@@ -1,28 +1,37 @@
 const axios = require('axios');
+const http = require('http');
+const https = require('https');
 
 // ============================================================
-// 💎 K-TRACE MASTER INTEL REPORT - ULTRA PREMIUM JSON EDITION
+// 💎 KALUA API ENTERPRISE GATEWAY - MASKED PRO EDITION
 // 👤 Developer & Admin: KaluaApiAdmin
 // 📢 Telegram Channel: KaluaApiStore
 // ============================================================
 
+const httpAgent = new http.Agent({ keepAlive: true, maxSockets: 100 });
+const httpsAgent = new https.Agent({ keepAlive: true, maxSockets: 100 });
+
+const secureClient = axios.create({
+  httpAgent,
+  httpsAgent,
+  timeout: 7000
+});
+
 module.exports = async (req, res) => {
-  // 1. Strict CORS & Secure Headers Setup
+  // Ultra-Professional Enterprise Headers & Masking
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
   res.setHeader('Content-Type', 'application/json; charset=utf-8');
-  res.setHeader('X-Powered-By', 'Kalua-Core-Engine/2.5.0');
-  res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+  res.setHeader('X-Powered-By', 'Kalua-Enterprise-Shield/4.0');
+  res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate');
 
-  // Handle pre-flight requests
   if (req.method === 'OPTIONS') {
     return res.status(200).end();
   }
 
   const mobile = req.query.mobile;
 
-  // 2. Input Validation: Parameter Missing
   if (!mobile) {
     return res.status(400).json({
       status: false,
@@ -33,16 +42,14 @@ module.exports = async (req, res) => {
       },
       error: {
         type: 'MISSING_PARAMETER',
-        message: 'Mobile parameter missing hai! Please provide a valid mobile number.',
+        message: 'Mobile parameter missing hai! Kripya valid number pass karein.',
         usage: '/api/lookup?mobile=9999999891'
-      },
-      timestamp: new Date().toISOString()
+      }
     });
   }
 
   const cleanNumber = String(mobile).replace(/\D/g, '');
 
-  // 3. Input Validation: Length Check
   if (cleanNumber.length < 10) {
     return res.status(400).json({
       status: false,
@@ -54,41 +61,33 @@ module.exports = async (req, res) => {
       error: {
         type: 'INVALID_FORMAT',
         message: 'Invalid mobile number format! Minimum 10 digits required.'
-      },
-      timestamp: new Date().toISOString()
+      }
     });
   }
 
+  const startTime = Date.now();
+
   try {
+    // Hidden Upstream Target (Completely Masked from Client)
     const upstreamUrl = `https://tfqdeadlo-1-78bapi.hf.space/search?mobile=${cleanNumber}`;
 
-    // 4. Advanced Header Spoofing & IP Rotation (Prevents Upstream Tracking)
-    const randomIP = `${Math.floor(Math.random() * 200) + 20}.${Math.floor(Math.random() * 254)}.${Math.floor(Math.random() * 254)}.${Math.floor(Math.random() * 254)}`;
-    
-    const userAgents = [
-      'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
-      'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.4 Safari/605.1.15',
-      'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36'
-    ];
-    const selectedUA = userAgents[Math.floor(Math.random() * userAgents.length)];
+    // Advanced Header Spoofing to look like native direct traffic
+    const randomIP = `${Math.floor(Math.random() * 180) + 20}.${Math.floor(Math.random() * 254)}.${Math.floor(Math.random() * 254)}.${Math.floor(Math.random() * 254)}`;
 
-    const apiResponse = await axios.get(upstreamUrl, {
-      timeout: 9000,
+    const apiResponse = await secureClient.get(upstreamUrl, {
       headers: {
-        'User-Agent': selectedUA,
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
         'Accept': 'application/json, text/plain, */*',
         'Accept-Language': 'en-US,en;q=0.9',
         'X-Forwarded-For': randomIP,
         'X-Real-IP': randomIP,
-        'Client-IP': randomIP,
-        'Referer': 'https://google.com/'
+        'Referer': 'https://www.google.com/'
       }
     });
 
     const rawData = apiResponse.data || {};
     const d = rawData.data || rawData;
 
-    // 5. Data Extraction & Clean Parsing
     const name = d.name || d.fullname || 'N/A';
     const fname = d.fname || d.father_name || d.fatherName || 'N/A';
     const altNum = d.alt || d.alternate_number || d.alt_number || 'N/A';
@@ -109,18 +108,20 @@ module.exports = async (req, res) => {
       }
     }
 
-    // 6. High-End Professional Output JSON Response
+    const executionTime = Date.now() - startTime;
+
+    // Ultra-Clean, Premium JSON Structure
     return res.status(200).json({
       status: true,
       code: 200,
       developer: {
         creator: 'KaluaApiAdmin',
         telegram_channel: 'https://t.me/KaluaApiStore',
-        engine: 'K-Trace Master Intel v2.5'
+        engine: 'Kalua Enterprise Core v4.0'
       },
       metadata: {
         queried_mobile: cleanNumber,
-        execution_time_ms: Math.floor(Math.random() * 40) + 120,
+        execution_time_ms: executionTime,
         timestamp: new Date().toISOString()
       },
       result: {
@@ -144,19 +145,23 @@ module.exports = async (req, res) => {
     });
 
   } catch (error) {
-    // 7. Secure & Professional Error Handling (No Upstream Leaks)
-    return res.status(500).json({
+    const executionTime = Date.now() - startTime;
+    // Secure Fallback: Never leaks upstream errors or source URLs
+    return res.status(502).json({
       status: false,
-      code: 500,
+      code: 502,
       developer: {
         creator: 'KaluaApiAdmin',
         telegram_channel: 'https://t.me/KaluaApiStore'
       },
       error: {
-        type: 'SERVICE_GATEWAY_TIMEOUT',
-        message: 'The requested intelligence record could not be processed at this moment. Please try again later.'
+        type: 'GATEWAY_TIMEOUT',
+        message: 'Upstream intelligence node busy hai. Kripya thodi der baad prayas karein.'
       },
-      timestamp: new Date().toISOString()
+      metadata: {
+        execution_time_ms: executionTime,
+        timestamp: new Date().toISOString()
+      }
     });
   }
 };
