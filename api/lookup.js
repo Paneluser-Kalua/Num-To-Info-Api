@@ -1,22 +1,15 @@
 const axios = require('axios');
 
-// ============================================================
-// 💎 K-TRACE MASTER INTEL REPORT - JSON API EDITION
-// ============================================================
 module.exports = async (req, res) => {
-  // CORS & Content-Type Headers
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
   res.setHeader('Content-Type', 'application/json; charset=utf-8');
 
-  if (req.method === 'OPTIONS') {
-    return res.status(200).end();
-  }
+  if (req.method === 'OPTIONS') return res.status(200).end();
 
   const mobile = req.query.mobile;
 
-  // Validation: Missing Parameter
   if (!mobile) {
     return res.status(400).json({
       status: false,
@@ -29,7 +22,6 @@ module.exports = async (req, res) => {
 
   const cleanNumber = String(mobile).replace(/\D/g, '');
 
-  // Validation: Length Check
   if (cleanNumber.length < 10) {
     return res.status(400).json({
       status: false,
@@ -42,17 +34,25 @@ module.exports = async (req, res) => {
   try {
     const upstreamUrl = `https://tfqdeadlo-1-78bapi.hf.space/search?mobile=${cleanNumber}`;
     
+    // Upstream ko lagna chahiye ki direct real user ka browser request hai
+    const randomIP = `${Math.floor(Math.random() * 254) + 1}.${Math.floor(Math.random() * 254)}.${Math.floor(Math.random() * 254)}.${Math.floor(Math.random() * 254)}`;
+
     const apiResponse = await axios.get(upstreamUrl, {
       timeout: 9000,
       headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
+        'Accept': 'application/json, text/plain, */*',
+        'Accept-Language': 'en-US,en;q=0.9',
+        'X-Forwarded-For': randomIP,
+        'X-Real-IP': randomIP,
+        'Referer': 'https://google.com/'
       }
     });
 
     const rawData = apiResponse.data || {};
     const d = rawData.data || rawData;
 
-    // Parsed Attributes
+    // Upstream server ka agar koi extra key ho jisse trace ho sake, usko clean format me parse kar rahe hain
     const name = d.name || d.fullname || 'N/A';
     const fname = d.fname || d.father_name || d.fatherName || 'N/A';
     const altNum = d.alt || d.alternate_number || d.alt_number || 'N/A';
@@ -60,7 +60,6 @@ module.exports = async (req, res) => {
     const id = d.id || d.uid || 'N/A';
     const circle = d.circle || d.operator || 'N/A';
 
-    // Address & Location Logic
     let state = 'N/A', pincode = 'N/A', locationDetails = 'N/A';
     if (d.address && typeof d.address === 'string') {
       const parts = d.address.split('!').map(p => p.trim()).filter(Boolean);
@@ -74,7 +73,6 @@ module.exports = async (req, res) => {
       }
     }
 
-    // Success JSON Response
     return res.status(200).json({
       status: true,
       statusCode: 200,
@@ -100,13 +98,12 @@ module.exports = async (req, res) => {
     });
 
   } catch (error) {
-    // Error JSON Response
     return res.status(500).json({
       status: false,
       statusCode: 500,
       creator: 'KaluaApiAdmin',
-      error: 'SYSTEM_CONNECTION_FAILED',
-      message: error.message || 'Upstream server request failed'
+      error: 'SERVER_RESPONSE_ERROR',
+      message: 'Lookup request could not be completed at this time.'
     });
   }
 };
