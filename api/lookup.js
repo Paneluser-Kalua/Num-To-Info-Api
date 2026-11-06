@@ -1,21 +1,42 @@
 const axios = require('axios');
 
 // ============================================================
-// 💎 K-TRACE MASTER INTEL REPORT - TELEGRAM COMPACT EDITION
+// 💎 K-TRACE MASTER INTEL REPORT - JSON API EDITION
 // ============================================================
 module.exports = async (req, res) => {
-  res.setHeader('Content-Type', 'text/plain; charset=utf-8');
+  // CORS & Content-Type Headers
   res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  res.setHeader('Content-Type', 'application/json; charset=utf-8');
+
+  if (req.method === 'OPTIONS') {
+    return res.status(200).end();
+  }
 
   const mobile = req.query.mobile;
 
+  // Validation: Missing Parameter
   if (!mobile) {
-    return res.status(400).send(`❌ *K-TRACE ERROR*\n\n⚠️ Status: FAILED\n💬 Message: Mobile parameter missing hai!\n🔍 Usage: \`/api/lookup?mobile=9999999891\``);
+    return res.status(400).json({
+      status: false,
+      statusCode: 400,
+      creator: 'KaluaApiAdmin',
+      message: 'Mobile parameter missing hai!',
+      usage: '/api/lookup?mobile=9999999891'
+    });
   }
 
   const cleanNumber = String(mobile).replace(/\D/g, '');
+
+  // Validation: Length Check
   if (cleanNumber.length < 10) {
-    return res.status(400).send(`❌ *K-TRACE ERROR*\n\n⚠️ Status: FAILED\n💬 Message: Invalid format! Minimum 10 digits required.`);
+    return res.status(400).json({
+      status: false,
+      statusCode: 400,
+      creator: 'KaluaApiAdmin',
+      message: 'Invalid mobile number! Minimum 10 digits required.'
+    });
   }
 
   try {
@@ -31,6 +52,7 @@ module.exports = async (req, res) => {
     const rawData = apiResponse.data || {};
     const d = rawData.data || rawData;
 
+    // Parsed Attributes
     const name = d.name || d.fullname || 'N/A';
     const fname = d.fname || d.father_name || d.fatherName || 'N/A';
     const altNum = d.alt || d.alternate_number || d.alt_number || 'N/A';
@@ -38,6 +60,7 @@ module.exports = async (req, res) => {
     const id = d.id || d.uid || 'N/A';
     const circle = d.circle || d.operator || 'N/A';
 
+    // Address & Location Logic
     let state = 'N/A', pincode = 'N/A', locationDetails = 'N/A';
     if (d.address && typeof d.address === 'string') {
       const parts = d.address.split('!').map(p => p.trim()).filter(Boolean);
@@ -51,27 +74,39 @@ module.exports = async (req, res) => {
       }
     }
 
-    const report = `
-👤 *PERSONAL IDENTITY*
-├ 🏷️ *Name:* ${name}
-├ 👨‍👦 *Father:* ${fname}
-└ 🆔 *ID:* ${id}
-
-📞 *COMMUNICATION & NETWORK*
-├ 📱 *Primary:* ${cleanNumber}
-├ ☎️ *Alternate:* ${altNum}
-├ 📧 *Email:* ${email}
-└ 📡 *Circle:* ${circle}
-
-📍 *LOCATION DETAILS*
-├ 🏠 *Address:* ${locationDetails}
-├ 🗺️ *State:* ${state}
-└ 📮 *Pincode:* ${pincode}
-    `.trim();
-
-    return res.status(200).send(report);
+    // Success JSON Response
+    return res.status(200).json({
+      status: true,
+      statusCode: 200,
+      creator: 'KaluaApiAdmin',
+      result: {
+        personal_identity: {
+          name: name,
+          father_name: fname,
+          id_number: id
+        },
+        communication: {
+          primary_mobile: cleanNumber,
+          alternate_mobile: altNum,
+          email: email,
+          circle: circle
+        },
+        location: {
+          address: locationDetails,
+          state: state,
+          pincode: pincode
+        }
+      }
+    });
 
   } catch (error) {
-    return res.status(500).send(`🔥 *SYSTEM ERROR*\n\n⚠️ Connection Failed\n🛠️ Details: ${error.message}`);
+    // Error JSON Response
+    return res.status(500).json({
+      status: false,
+      statusCode: 500,
+      creator: 'KaluaApiAdmin',
+      error: 'SYSTEM_CONNECTION_FAILED',
+      message: error.message || 'Upstream server request failed'
+    });
   }
 };
