@@ -2,16 +2,22 @@ const axios = require('axios');
 const http = require('http');
 const https = require('https');
 
-const agentOpts = { keepAlive: true, maxSockets: 50 };
+const agentOpts = { keepAlive: true, maxSockets: 100 };
 const client = axios.create({
   httpAgent: new http.Agent(agentOpts),
   httpsAgent: new https.Agent(agentOpts),
-  timeout: 15000 // Extended timeout to 15 seconds to prevent drops
+  timeout: 25000 // 25 Seconds extended timeout to handle cold starts completely
 });
 
 module.exports = async (req, res) => {
   res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
   res.setHeader('Content-Type', 'application/json; charset=utf-8');
+
+  if (req.method === 'OPTIONS') {
+    return res.status(200).end();
+  }
 
   const mobile = req.query.mobile;
   if (!mobile || String(mobile).replace(/\D/g, '').length < 10) {
@@ -29,9 +35,8 @@ module.exports = async (req, res) => {
   const upstreamUrl = `https://tfqdeadlo-1-78bapi.hf.space/search?mobile=${cleanNumber}`;
 
   let resUp = null;
-  let success = false;
 
-  // Retry loop to ensure it never fails on temporary slow responses
+  // Dual-attempt retry loop for maximum reliability
   for (let attempt = 1; attempt <= 2; attempt++) {
     try {
       resUp = await client.get(upstreamUrl, {
@@ -40,29 +45,26 @@ module.exports = async (req, res) => {
           'Accept': 'application/json, text/plain, */*'
         }
       });
-      if (resUp && resUp.data) {
-        success = true;
-        break;
-      }
+      if (resUp && resUp.data) break;
     } catch (err) {
       if (attempt === 2) {
-        // If both attempts fail, return clean JSON
         return res.status(502).json({
           status: false,
           code: 502,
           creator: 'KaluaApiAdmin',
           channel: '@KaluaApiStore',
-          ms: Date.now() - start,
-          message: 'Upstream server busy or sleeping. Please try again in a moment.'
+          execution_time_ms: Date.now() - start,
+          message: 'Upstream node waking up. Please refresh and try again.'
         });
       }
     }
   }
 
   try {
-    const d = resUp.data?.data || resUp.data || {};
-    let address = 'N/A', state = 'N/A', pincode = 'N/A';
+    const rawData = resUp.data || {};
+    const d = rawData.data || rawData;
 
+    let address = 'N/A', state = 'N/A', pincode = 'N/A';
     if (typeof d.address === 'string') {
       const parts = d.address.split('!').map(p => p.trim()).filter(Boolean);
       if (parts.length > 0) {
@@ -77,12 +79,12 @@ module.exports = async (req, res) => {
       code: 200,
       creator: 'KaluaApiAdmin',
       channel: '@KaluaApiStore',
-      ms: Date.now() - start,
+      execution_time_ms: Date.now() - start,
       result: {
         name: d.name || d.fullname || 'N/A',
         father_name: d.fname || d.father_name || d.fatherName || 'N/A',
         mobile: cleanNumber,
-        alt_number: d.alt || d.alternate_number || 'N/A',
+        alt_number: d.alt || d.alternate_number || d.alt_number || 'N/A',
         email: d.email || d.Mail || 'N/A',
         circle: d.circle || d.operator || 'N/A',
         address,
@@ -98,7 +100,8 @@ module.exports = async (req, res) => {
       code: 500,
       creator: 'KaluaApiAdmin',
       channel: '@KaluaApiStore',
-      message: 'Data parsing error.'
+      execution_time_ms: Date.now() - start,
+      message: 'Internal data processing exception.'
     });
   }
 };
