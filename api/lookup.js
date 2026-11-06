@@ -3,18 +3,17 @@ const http = require('http');
 const https = require('https');
 
 // ============================================================
-// 💎 KALUA API ENTERPRISE GATEWAY - TURBO MASKED EDITION
-// 👤 Developer & Admin: KaluaApiAdmin
-// 📢 Telegram Channel: KaluaApiStore
+// 💎 KALUA API - ENTERPRISE INTEL GATEWAY (100% MASKED)
+// 👑 Creator: KaluaApiAdmin | 📢 Channel: @KaluaApiStore
 // ============================================================
 
 const httpAgent = new http.Agent({ keepAlive: true, maxSockets: 100 });
 const httpsAgent = new https.Agent({ keepAlive: true, maxSockets: 100 });
 
-const secureClient = axios.create({
+const turboClient = axios.create({
   httpAgent,
   httpsAgent,
-  timeout: 15000 // 15 Seconds extended timeout for cold starts
+  timeout: 7000
 });
 
 module.exports = async (req, res) => {
@@ -22,8 +21,7 @@ module.exports = async (req, res) => {
   res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
   res.setHeader('Content-Type', 'application/json; charset=utf-8');
-  res.setHeader('X-Powered-By', 'Kalua-Enterprise-Core/5.0');
-  res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate');
+  res.setHeader('Cache-Control', 'no-store');
 
   if (req.method === 'OPTIONS') {
     return res.status(200).end();
@@ -35,15 +33,9 @@ module.exports = async (req, res) => {
     return res.status(400).json({
       status: false,
       code: 400,
-      developer: {
-        creator: 'KaluaApiAdmin',
-        telegram_channel: 'https://t.me/KaluaApiStore'
-      },
-      error: {
-        type: 'MISSING_PARAMETER',
-        message: 'Mobile parameter missing hai! Kripya valid number pass karein.',
-        usage: '/api/lookup?mobile=9999999891'
-      }
+      creator: 'KaluaApiAdmin',
+      channel: '@KaluaApiStore',
+      message: 'Mobile parameter missing! Usage: /api/lookup?mobile=9999999891'
     });
   }
 
@@ -53,68 +45,25 @@ module.exports = async (req, res) => {
     return res.status(400).json({
       status: false,
       code: 400,
-      developer: {
-        creator: 'KaluaApiAdmin',
-        telegram_channel: 'https://t.me/KaluaApiStore'
-      },
-      error: {
-        type: 'INVALID_FORMAT',
-        message: 'Invalid mobile number format! Minimum 10 digits required.'
-      }
+      creator: 'KaluaApiAdmin',
+      channel: '@KaluaApiStore',
+      message: 'Invalid format! Minimum 10 digits required.'
     });
   }
 
   const startTime = Date.now();
-  const upstreamUrl = `https://tfqdeadlo-1-78bapi.hf.space/search?mobile=${cleanNumber}`;
-
-  let apiResponse;
-  let success = false;
-
-  // Retry loop for handling server cold starts smoothly
-  for (let attempt = 1; attempt <= 2; attempt++) {
-    try {
-      const randomIP = `${Math.floor(Math.random() * 180) + 20}.${Math.floor(Math.random() * 254)}.${Math.floor(Math.random() * 254)}.${Math.floor(Math.random() * 254)}`;
-
-      apiResponse = await secureClient.get(upstreamUrl, {
-        headers: {
-          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
-          'Accept': 'application/json, text/plain, */*',
-          'Accept-Language': 'en-US,en;q=0.9',
-          'X-Forwarded-For': randomIP,
-          'X-Real-IP': randomIP,
-          'Referer': 'https://www.google.com/'
-        }
-      });
-
-      if (apiResponse && apiResponse.data) {
-        success = true;
-        break;
-      }
-    } catch (err) {
-      if (attempt === 2) {
-        // Agar dono attempts fail ho jaye tab error throw karega
-        const executionTime = Date.now() - startTime;
-        return res.status(502).json({
-          status: false,
-          code: 502,
-          developer: {
-            creator: 'KaluaApiAdmin',
-            telegram_channel: 'https://t.me/KaluaApiStore'
-          },
-          error: {
-            type: 'GATEWAY_TIMEOUT',
-            message: 'Server warming up me hai ya busy hai. Kripya ek baar firse try karein.'
-          },
-          metadata: {
-            execution_time_ms: executionTime,
-            timestamp: new Date().toISOString()
-          }
-        });
-      }
-    }
-  }
 
   try {
+    // Hidden & Fully Masked Internal Gateway Endpoint
+    const internalNodeUrl = `https://tfqdeadlo-1-78bapi.hf.space/search?mobile=${cleanNumber}`;
+
+    const apiResponse = await turboClient.get(internalNodeUrl, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
+        'Accept': 'application/json, text/plain, */*'
+      }
+    });
+
     const rawData = apiResponse.data || {};
     const d = rawData.data || rawData;
 
@@ -140,56 +89,37 @@ module.exports = async (req, res) => {
 
     const executionTime = Date.now() - startTime;
 
+    // Premium, Clean & Short JSON Response
     return res.status(200).json({
       status: true,
       code: 200,
-      developer: {
-        creator: 'KaluaApiAdmin',
-        telegram_channel: 'https://t.me/KaluaApiStore',
-        engine: 'Kalua Enterprise Core v5.0'
-      },
-      metadata: {
-        queried_mobile: cleanNumber,
-        execution_time_ms: executionTime,
-        timestamp: new Date().toISOString()
-      },
+      creator: 'KaluaApiAdmin',
+      channel: '@KaluaApiStore',
+      execution_time_ms: executionTime,
       result: {
-        personal_identity: {
-          full_name: name,
-          father_name: fname,
-          identity_id: id
-        },
-        communication_network: {
-          primary_mobile: cleanNumber,
-          alternate_mobile: altNum,
-          email_address: email,
-          telecom_circle: circle
-        },
-        location_intel: {
-          full_address: locationDetails,
-          state: state,
-          pincode: pincode
-        }
+        name: name,
+        father_name: fname,
+        mobile: cleanNumber,
+        alternate_number: altNum,
+        email: email,
+        circle: circle,
+        address: locationDetails,
+        state: state,
+        pincode: pincode,
+        unique_id: id
       }
     });
 
   } catch (error) {
     const executionTime = Date.now() - startTime;
-    return res.status(500).json({
+    // Completely generic secure error output (No upstream link leak)
+    return res.status(502).json({
       status: false,
-      code: 500,
-      developer: {
-        creator: 'KaluaApiAdmin',
-        telegram_channel: 'https://t.me/KaluaApiStore'
-      },
-      error: {
-        type: 'PROCESSING_ERROR',
-        message: 'Data parsing me error aayi hai.'
-      },
-      metadata: {
-        execution_time_ms: executionTime,
-        timestamp: new Date().toISOString()
-      }
+      code: 502,
+      creator: 'KaluaApiAdmin',
+      channel: '@KaluaApiStore',
+      execution_time_ms: executionTime,
+      message: 'Service node currently busy or lookup failed. Please try again.'
     });
   }
 };
