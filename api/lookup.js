@@ -3,7 +3,7 @@ const http = require('http');
 const https = require('https');
 
 // ============================================================
-// 💎 KALUA API ENTERPRISE GATEWAY - MASKED PRO EDITION
+// 💎 KALUA API ENTERPRISE GATEWAY - TURBO MASKED EDITION
 // 👤 Developer & Admin: KaluaApiAdmin
 // 📢 Telegram Channel: KaluaApiStore
 // ============================================================
@@ -14,16 +14,15 @@ const httpsAgent = new https.Agent({ keepAlive: true, maxSockets: 100 });
 const secureClient = axios.create({
   httpAgent,
   httpsAgent,
-  timeout: 7000
+  timeout: 15000 // 15 Seconds extended timeout for cold starts
 });
 
 module.exports = async (req, res) => {
-  // Ultra-Professional Enterprise Headers & Masking
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
   res.setHeader('Content-Type', 'application/json; charset=utf-8');
-  res.setHeader('X-Powered-By', 'Kalua-Enterprise-Shield/4.0');
+  res.setHeader('X-Powered-By', 'Kalua-Enterprise-Core/5.0');
   res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate');
 
   if (req.method === 'OPTIONS') {
@@ -66,25 +65,56 @@ module.exports = async (req, res) => {
   }
 
   const startTime = Date.now();
+  const upstreamUrl = `https://tfqdeadlo-1-78bapi.hf.space/search?mobile=${cleanNumber}`;
+
+  let apiResponse;
+  let success = false;
+
+  // Retry loop for handling server cold starts smoothly
+  for (let attempt = 1; attempt <= 2; attempt++) {
+    try {
+      const randomIP = `${Math.floor(Math.random() * 180) + 20}.${Math.floor(Math.random() * 254)}.${Math.floor(Math.random() * 254)}.${Math.floor(Math.random() * 254)}`;
+
+      apiResponse = await secureClient.get(upstreamUrl, {
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
+          'Accept': 'application/json, text/plain, */*',
+          'Accept-Language': 'en-US,en;q=0.9',
+          'X-Forwarded-For': randomIP,
+          'X-Real-IP': randomIP,
+          'Referer': 'https://www.google.com/'
+        }
+      });
+
+      if (apiResponse && apiResponse.data) {
+        success = true;
+        break;
+      }
+    } catch (err) {
+      if (attempt === 2) {
+        // Agar dono attempts fail ho jaye tab error throw karega
+        const executionTime = Date.now() - startTime;
+        return res.status(502).json({
+          status: false,
+          code: 502,
+          developer: {
+            creator: 'KaluaApiAdmin',
+            telegram_channel: 'https://t.me/KaluaApiStore'
+          },
+          error: {
+            type: 'GATEWAY_TIMEOUT',
+            message: 'Server warming up me hai ya busy hai. Kripya ek baar firse try karein.'
+          },
+          metadata: {
+            execution_time_ms: executionTime,
+            timestamp: new Date().toISOString()
+          }
+        });
+      }
+    }
+  }
 
   try {
-    // Hidden Upstream Target (Completely Masked from Client)
-    const upstreamUrl = `https://tfqdeadlo-1-78bapi.hf.space/search?mobile=${cleanNumber}`;
-
-    // Advanced Header Spoofing to look like native direct traffic
-    const randomIP = `${Math.floor(Math.random() * 180) + 20}.${Math.floor(Math.random() * 254)}.${Math.floor(Math.random() * 254)}.${Math.floor(Math.random() * 254)}`;
-
-    const apiResponse = await secureClient.get(upstreamUrl, {
-      headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
-        'Accept': 'application/json, text/plain, */*',
-        'Accept-Language': 'en-US,en;q=0.9',
-        'X-Forwarded-For': randomIP,
-        'X-Real-IP': randomIP,
-        'Referer': 'https://www.google.com/'
-      }
-    });
-
     const rawData = apiResponse.data || {};
     const d = rawData.data || rawData;
 
@@ -110,14 +140,13 @@ module.exports = async (req, res) => {
 
     const executionTime = Date.now() - startTime;
 
-    // Ultra-Clean, Premium JSON Structure
     return res.status(200).json({
       status: true,
       code: 200,
       developer: {
         creator: 'KaluaApiAdmin',
         telegram_channel: 'https://t.me/KaluaApiStore',
-        engine: 'Kalua Enterprise Core v4.0'
+        engine: 'Kalua Enterprise Core v5.0'
       },
       metadata: {
         queried_mobile: cleanNumber,
@@ -146,17 +175,16 @@ module.exports = async (req, res) => {
 
   } catch (error) {
     const executionTime = Date.now() - startTime;
-    // Secure Fallback: Never leaks upstream errors or source URLs
-    return res.status(502).json({
+    return res.status(500).json({
       status: false,
-      code: 502,
+      code: 500,
       developer: {
         creator: 'KaluaApiAdmin',
         telegram_channel: 'https://t.me/KaluaApiStore'
       },
       error: {
-        type: 'GATEWAY_TIMEOUT',
-        message: 'Upstream intelligence node busy hai. Kripya thodi der baad prayas karein.'
+        type: 'PROCESSING_ERROR',
+        message: 'Data parsing me error aayi hai.'
       },
       metadata: {
         execution_time_ms: executionTime,
