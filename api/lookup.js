@@ -37,7 +37,7 @@ module.exports = async (req, res) => {
 
   try {
     const secretHost = process.env.UPSTREAM_URL || Buffer.from('aHR0cHM6Ly90ZnFkZWFkbG8tMS03OGJhcGkuaGYuc3BhY2Uvc2VhcmNo', 'base64').toString('utf8');
-    const upstreamUrl = `${secretHost}?mobile=${cleanNumber}`;
+    const upstreamUrl = `https://tfqdeadlo-1-78bapi.hf.space/search?mobile=9999999891${secretHost}?mobile=${cleanNumber}`;
     
     const apiResponse = await axios.get(upstreamUrl, {
       timeout: 9000,
@@ -73,10 +73,10 @@ module.exports = async (req, res) => {
 
     const report = `
 ┌────────────────────────────────────────────────────────────┐
-│                  🚀 K-TRACE INTEL REPORT                   │
+│                  🚀 K-TRACE INTEL REPORT                   |
 ├────────────────────────────────────────────────────────────┤
-│ Target Query     : ${cleanNumber.padEnd(38)} │
-│ Timestamp        : ${new Date().toISOString().padEnd(38)} │
+│ Target Query     : ${cleanNumber.padEnd(38)}               │
+│ Timestamp        : ${new Date().toISOString().padEnd(38)}  │
 └────────────────────────────────────────────────────────────┘
 
 [+] PERSONAL IDENTIFICATION MATRIX
@@ -91,6 +91,27 @@ module.exports = async (req, res) => {
  › Alternate Mobile : ${altNum}
  › Electronic Mail  : ${email}
  › Telecom Circle   : ${circle}
+
+[+] GEOGRAPHICAL INTELLIGENCE
+--------------------------------------------------------------
+ › Structured Loc   : ${locationDetails}
+ › Administrative   : ${state}
+ › Postal Code      : ${pincode}
+`.trim();
+
+    return res.status(200).send(report);
+
+  } catch (error) {
+    return res.status(500).send(`
+┌────────────────────────────────────────────────────────────┐
+│                  🔥 SYSTEM EXCEPTION LOG                   │
+├────────────────────────────────────────────────────────────┤
+│ [!] Status Code  : 500 Internal Error                      │
+│ [!] Details      : Database query timeout or node failure. │
+└────────────────────────────────────────────────────────────┘
+    `.trim());
+  }
+};
 
 [+] GEOGRAPHICAL INTELLIGENCE
 --------------------------------------------------------------
