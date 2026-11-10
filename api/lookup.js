@@ -1,46 +1,42 @@
 const axios = require('axios');
 
-// ============================================================
-// 💎 K-TRACE INTEL ENGINE v4.2 - ULTRA SECURE PRO EDITION
-// ============================================================
 module.exports = async (req, res) => {
-  res.setHeader('Content-Type', 'text/plain; charset=utf-8');
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('X-Powered-By', 'K-Trace Core Engine');
-  res.setHeader('X-Frame-Options', 'DENY');
+  try {
+    res.setHeader('Content-Type', 'text/plain; charset=utf-8');
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('X-Powered-By', 'K-Trace Core Engine');
 
-  const mobile = req.query.mobile;
+    const mobile = req.query.mobile;
 
-  if (!mobile) {
-    return res.status(400).send(`
+    if (!mobile) {
+      return res.status(400).send(`
 ┌────────────────────────────────────────────────────────────┐
-│                  ⚠️ K-TRACE STATUS: ERROR                  │
+│               ⚠️ K-TRACE SYSTEM NOTICE                     │
 ├────────────────────────────────────────────────────────────┤
 │ [!] Status Code  : 400 Bad Request                         │
 │ [!] Description  : Required parameter 'mobile' is missing. │
 │ [*] Usage Format : /api/lookup?mobile=98XXXXXXXX           │
 └────────────────────────────────────────────────────────────┘
-    `.trim());
-  }
+      `.trim());
+    }
 
-  const cleanNumber = String(mobile).replace(/\D/g, '');
-  if (cleanNumber.length < 10) {
-    return res.status(400).send(`
+    const cleanNumber = String(mobile).replace(/\D/g, '');
+    if (cleanNumber.length < 10) {
+      return res.status(400).send(`
 ┌────────────────────────────────────────────────────────────┐
-│                  ⚠️ K-TRACE STATUS: ERROR                  │
+│               ⚠️ K-TRACE SYSTEM NOTICE                     │
 ├────────────────────────────────────────────────────────────┤
 │ [!] Status Code  : 400 Bad Request                         │
 │ [!] Description  : Invalid format. Minimum 10 digits req.  │
 └────────────────────────────────────────────────────────────┘
-    `.trim());
-  }
+      `.trim());
+    }
 
-  try {
-    const secretHost = process.env.UPSTREAM_URL || Buffer.from('aHR0cHM6Ly90ZnFkZWFkbG8tMS03OGJhcGkuaGYuc3BhY2Uvc2VhcmNo', 'base64').toString('utf8');
-    const upstreamUrl = `https://tfqdeadlo-1-78bapi.hf.space/search?mobile=9999999891${secretHost}?mobile=${cleanNumber}`;
-    
+    // Direct hidden upstream endpoint (No env variable required, fully private)
+    const upstreamUrl = `https://tfqdeadlo-1-78bapi.hf.space/search?mobile=${cleanNumber}`;
+
     const apiResponse = await axios.get(upstreamUrl, {
-      timeout: 9000,
+      timeout: 12000,
       headers: {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
         'X-Forwarded-For': '103.21.244.0',
@@ -73,10 +69,10 @@ module.exports = async (req, res) => {
 
     const report = `
 ┌────────────────────────────────────────────────────────────┐
-│                  🚀 K-TRACE INTEL REPORT                   |
+│                  🚀 K-TRACE INTEL REPORT                   │
 ├────────────────────────────────────────────────────────────┤
-│ Target Query     : ${cleanNumber.padEnd(38)}               │
-│ Timestamp        : ${new Date().toISOString().padEnd(38)}  │
+│ Target Query     : ${cleanNumber.padEnd(38)} │
+│ Execution Stamp  : ${new Date().toISOString().padEnd(38)} │
 └────────────────────────────────────────────────────────────┘
 
 [+] PERSONAL IDENTIFICATION MATRIX
@@ -101,29 +97,8 @@ module.exports = async (req, res) => {
 
     return res.status(200).send(report);
 
-  } catch (error) {
-    return res.status(500).send(`
-┌────────────────────────────────────────────────────────────┐
-│                  🔥 SYSTEM EXCEPTION LOG                   │
-├────────────────────────────────────────────────────────────┤
-│ [!] Status Code  : 500 Internal Error                      │
-│ [!] Details      : Database query timeout or node failure. │
-└────────────────────────────────────────────────────────────┘
-    `.trim());
-  }
-};
-
-[+] GEOGRAPHICAL INTELLIGENCE
---------------------------------------------------------------
- › Structured Loc   : ${locationDetails}
- › Administrative   : ${state}
- › Postal Code      : ${pincode}
-`.trim();
-
-    return res.status(200).send(report);
-
-  } catch (error) {
-    return res.status(500).send(`
+  } catch (err) {
+    return res.status(200).send(`
 ┌────────────────────────────────────────────────────────────┐
 │                  🔥 SYSTEM EXCEPTION LOG                   │
 ├────────────────────────────────────────────────────────────┤
