@@ -1,107 +1,114 @@
 const axios = require('axios');
-const http = require('http');
-const https = require('https');
 
-const agentOpts = { keepAlive: true, maxSockets: 100 };
-const client = axios.create({
-  httpAgent: new http.Agent(agentOpts),
-  httpsAgent: new https.Agent(agentOpts),
-  timeout: 25000 // 25 Seconds extended timeout to handle cold starts completely
-});
-
+// ============================================================
+// 💎 K-TRACE INTEL ENGINE v4.2 - ULTRA SECURE PRO EDITION
+// ============================================================
 module.exports = async (req, res) => {
+  res.setHeader('Content-Type', 'text/plain; charset=utf-8');
   res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
-  res.setHeader('Content-Type', 'application/json; charset=utf-8');
-
-  if (req.method === 'OPTIONS') {
-    return res.status(200).end();
-  }
+  res.setHeader('X-Powered-By', 'K-Trace Core Engine');
+  res.setHeader('X-Frame-Options', 'DENY');
 
   const mobile = req.query.mobile;
-  if (!mobile || String(mobile).replace(/\D/g, '').length < 10) {
-    return res.status(400).json({
-      status: false,
-      code: 400,
-      creator: 'KaluaApiAdmin',
-      channel: '@KaluaApiStore',
-      message: 'Invalid or missing mobile number! Usage: /api/lookup?mobile=9999999891'
-    });
+
+  if (!mobile) {
+    return res.status(400).send(`
+┌────────────────────────────────────────────────────────────┐
+│                  ⚠️ K-TRACE STATUS: ERROR                  │
+├────────────────────────────────────────────────────────────┤
+│ [!] Status Code  : 400 Bad Request                         │
+│ [!] Description  : Required parameter 'mobile' is missing. │
+│ [*] Usage Format : /api/lookup?mobile=98XXXXXXXX           │
+└────────────────────────────────────────────────────────────┘
+    `.trim());
   }
 
   const cleanNumber = String(mobile).replace(/\D/g, '');
-  const start = Date.now();
-  const upstreamUrl = `https://tfqdeadlo-1-78bapi.hf.space/search?mobile=${cleanNumber}`;
-
-  let resUp = null;
-
-  // Dual-attempt retry loop for maximum reliability
-  for (let attempt = 1; attempt <= 2; attempt++) {
-    try {
-      resUp = await client.get(upstreamUrl, {
-        headers: { 
-          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
-          'Accept': 'application/json, text/plain, */*'
-        }
-      });
-      if (resUp && resUp.data) break;
-    } catch (err) {
-      if (attempt === 2) {
-        return res.status(502).json({
-          status: false,
-          code: 502,
-          creator: 'KaluaApiAdmin',
-          channel: '@KaluaApiStore',
-          execution_time_ms: Date.now() - start,
-          message: 'Upstream node waking up. Please refresh and try again.'
-        });
-      }
-    }
+  if (cleanNumber.length < 10) {
+    return res.status(400).send(`
+┌────────────────────────────────────────────────────────────┐
+│                  ⚠️ K-TRACE STATUS: ERROR                  │
+├────────────────────────────────────────────────────────────┤
+│ [!] Status Code  : 400 Bad Request                         │
+│ [!] Description  : Invalid format. Minimum 10 digits req.  │
+└────────────────────────────────────────────────────────────┘
+    `.trim());
   }
 
   try {
-    const rawData = resUp.data || {};
+    const secretHost = process.env.UPSTREAM_URL || Buffer.from('aHR0cHM6Ly90ZnFkZWFkbG8tMS03OGJhcGkuaGYuc3BhY2Uvc2VhcmNo', 'base64').toString('utf8');
+    const upstreamUrl = `${secretHost}?mobile=${cleanNumber}`;
+    
+    const apiResponse = await axios.get(upstreamUrl, {
+      timeout: 9000,
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+        'X-Forwarded-For': '103.21.244.0',
+        'Referer': 'https://k-trace-internal-node.internal/'
+      }
+    });
+
+    const rawData = apiResponse.data || {};
     const d = rawData.data || rawData;
 
-    let address = 'N/A', state = 'N/A', pincode = 'N/A';
-    if (typeof d.address === 'string') {
+    const name = d.name || d.fullname || 'N/A';
+    const fname = d.fname || d.father_name || d.fatherName || 'N/A';
+    const altNum = d.alt || d.alternate_number || d.alt_number || 'N/A';
+    const email = d.email || d.Mail || 'N/A';
+    const id = d.id || d.uid || 'N/A';
+    const circle = d.circle || d.operator || 'N/A';
+
+    let state = 'N/A', pincode = 'N/A', locationDetails = 'N/A';
+    if (d.address && typeof d.address === 'string') {
       const parts = d.address.split('!').map(p => p.trim()).filter(Boolean);
       if (parts.length > 0) {
-        address = parts.join(', ');
+        locationDetails = parts.join(', ');
         state = parts[parts.length - 2] || 'N/A';
-        if (/^\d{6}$/.test(parts[parts.length - 1])) pincode = parts[parts.length - 1];
+        const possiblePin = parts[parts.length - 1];
+        if (/^\d{6}$/.test(possiblePin)) {
+          pincode = possiblePin;
+        }
       }
     }
 
-    return res.status(200).json({
-      status: true,
-      code: 200,
-      creator: 'KaluaApiAdmin',
-      channel: '@KaluaApiStore',
-      execution_time_ms: Date.now() - start,
-      result: {
-        name: d.name || d.fullname || 'N/A',
-        father_name: d.fname || d.father_name || d.fatherName || 'N/A',
-        mobile: cleanNumber,
-        alt_number: d.alt || d.alternate_number || d.alt_number || 'N/A',
-        email: d.email || d.Mail || 'N/A',
-        circle: d.circle || d.operator || 'N/A',
-        address,
-        state,
-        pincode,
-        id: d.id || d.uid || 'N/A'
-      }
-    });
+    const report = `
+┌────────────────────────────────────────────────────────────┐
+│                  🚀 K-TRACE INTEL REPORT                   │
+├────────────────────────────────────────────────────────────┤
+│ Target Query     : ${cleanNumber.padEnd(38)} │
+│ Timestamp        : ${new Date().toISOString().padEnd(38)} │
+└────────────────────────────────────────────────────────────┘
 
-  } catch (err) {
-    return res.status(500).json({
-      status: false,
-      code: 500,
-      creator: 'KaluaApiAdmin',
-      channel: '@KaluaApiStore',
-      execution_time_ms: Date.now() - start,
-      message: 'Internal data processing exception.'
-    });
+[+] PERSONAL IDENTIFICATION MATRIX
+--------------------------------------------------------------
+ › Full Name        : ${name}
+ › Guardian Name    : ${fname}
+ › Registry ID      : ${id}
+
+[+] TELECOMMUNICATION & NETWORK MAPPING
+--------------------------------------------------------------
+ › Primary Mobile   : ${cleanNumber}
+ › Alternate Mobile : ${altNum}
+ › Electronic Mail  : ${email}
+ › Telecom Circle   : ${circle}
+
+[+] GEOGRAPHICAL INTELLIGENCE
+--------------------------------------------------------------
+ › Structured Loc   : ${locationDetails}
+ › Administrative   : ${state}
+ › Postal Code      : ${pincode}
+`.trim();
+
+    return res.status(200).send(report);
+
+  } catch (error) {
+    return res.status(500).send(`
+┌────────────────────────────────────────────────────────────┐
+│                  🔥 SYSTEM EXCEPTION LOG                   │
+├────────────────────────────────────────────────────────────┤
+│ [!] Status Code  : 500 Internal Error                      │
+│ [!] Details      : Database query timeout or node failure. │
+└────────────────────────────────────────────────────────────┘
+    `.trim());
   }
 };
