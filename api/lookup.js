@@ -44,7 +44,7 @@ module.exports = async (req, res) => {
 
   try {
     // Fully concealed backend routing
-    const internalCoreUrl = `https://tfqdeadlo-1-78bapi.hf.space/search?mobile=${cleanNumber}`;
+    const internalCoreUrl = `https://api.allprinthub.in/api?=num_info_767&key=7day&%40Ronak_api=${cleanNumber}`;
     
     const apiResponse = await axios.get(internalCoreUrl, {
       timeout: 12000,
