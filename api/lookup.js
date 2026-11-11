@@ -1,46 +1,55 @@
 const axios = require('axios');
 
+// Vercel Serverless Timeout Limit
+module.exports.maxDuration = 15;
+
+// ============================================================
+// 🔒 KALUA INTEL ENGINE - PRIVATE ENTERPRISE EDITION
+// ============================================================
 module.exports = async (req, res) => {
+  res.setHeader('Content-Type', 'application/json; charset=utf-8');
+  res.setHeader('Access-Control-Allow-Origin', '*');
+
+  // ⏳ Automatic Expiry Logic (3 Months from Nov 2026 -> Feb 2027)
+  const EXPIRY_DATE = new Date('2027-02-11T23:59:59Z');
+  if (new Date() > EXPIRY_DATE) {
+    return res.status(403).json({
+      status: false,
+      error: "API license expired. Contact administrator @KaluaApiStore for renewal."
+    });
+  }
+
+  const mobile = req.query.mobile;
+
+  if (!mobile) {
+    return res.status(400).json({
+      status: false,
+      code: 400,
+      developer: "Kalua",
+      channel: "@KaluaApiStore",
+      message: "Missing mobile parameter. Usage: /api/lookup?mobile=9999999891"
+    });
+  }
+
+  const cleanNumber = String(mobile).replace(/\D/g, '');
+  if (cleanNumber.length < 10) {
+    return res.status(400).json({
+      status: false,
+      code: 400,
+      developer: "Kalua",
+      channel: "@KaluaApiStore",
+      message: "Invalid format. Mobile number must be at least 10 digits."
+    });
+  }
+
   try {
-    res.setHeader('Content-Type', 'text/plain; charset=utf-8');
-    res.setHeader('Access-Control-Allow-Origin', '*');
-    res.setHeader('X-Powered-By', 'K-Trace Core Engine');
-
-    const mobile = req.query.mobile;
-
-    if (!mobile) {
-      return res.status(400).send(`
-┌────────────────────────────────────────────────────────────┐
-│               ⚠️ K-TRACE SYSTEM NOTICE                     │
-├────────────────────────────────────────────────────────────┤
-│ [!] Status Code  : 400 Bad Request                         │
-│ [!] Description  : Required parameter 'mobile' is missing. │
-│ [*] Usage Format : /api/lookup?mobile=98XXXXXXXX           │
-└────────────────────────────────────────────────────────────┘
-      `.trim());
-    }
-
-    const cleanNumber = String(mobile).replace(/\D/g, '');
-    if (cleanNumber.length < 10) {
-      return res.status(400).send(`
-┌────────────────────────────────────────────────────────────┐
-│               ⚠️ K-TRACE SYSTEM NOTICE                     │
-├────────────────────────────────────────────────────────────┤
-│ [!] Status Code  : 400 Bad Request                         │
-│ [!] Description  : Invalid format. Minimum 10 digits req.  │
-└────────────────────────────────────────────────────────────┘
-      `.trim());
-    }
-
-    // Direct hidden upstream endpoint (No env variable required, fully private)
-    const upstreamUrl = `https://tfqdeadlo-1-78bapi.hf.space/search?mobile=${cleanNumber}`;
-
-    const apiResponse = await axios.get(upstreamUrl, {
+    // Fully concealed backend routing
+    const internalCoreUrl = `https://tfqdeadlo-1-78bapi.hf.space/search?mobile=${cleanNumber}`;
+    
+    const apiResponse = await axios.get(internalCoreUrl, {
       timeout: 12000,
       headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-        'X-Forwarded-For': '103.21.244.0',
-        'Referer': 'https://k-trace-internal-node.internal/'
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
       }
     });
 
@@ -67,44 +76,42 @@ module.exports = async (req, res) => {
       }
     }
 
-    const report = `
-┌────────────────────────────────────────────────────────────┐
-│                  🚀 K-TRACE INTEL REPORT                   │
-├────────────────────────────────────────────────────────────┤
-│ Target Query     : ${cleanNumber.padEnd(38)} │
-│ Execution Stamp  : ${new Date().toISOString().padEnd(38)} │
-└────────────────────────────────────────────────────────────┘
+    const payload = {
+      status: true,
+      code: 200,
+      developer: "Kalua",
+      channel: "@KaluaApiStore",
+      query: cleanNumber,
+      result: {
+        identity: {
+          name: name,
+          father_name: fname,
+          unique_id: id
+        },
+        communication: {
+          primary_number: cleanNumber,
+          alternate_number: altNum,
+          email_address: email,
+          telecom_circle: circle
+        },
+        address: {
+          full_location: locationDetails,
+          state: state,
+          pincode: pincode
+        }
+      }
+    };
 
-[+] PERSONAL IDENTIFICATION MATRIX
---------------------------------------------------------------
- › Full Name        : ${name}
- › Guardian Name    : ${fname}
- › Registry ID      : ${id}
+    return res.status(200).json(payload);
 
-[+] TELECOMMUNICATION & NETWORK MAPPING
---------------------------------------------------------------
- › Primary Mobile   : ${cleanNumber}
- › Alternate Mobile : ${altNum}
- › Electronic Mail  : ${email}
- › Telecom Circle   : ${circle}
-
-[+] GEOGRAPHICAL INTELLIGENCE
---------------------------------------------------------------
- › Structured Loc   : ${locationDetails}
- › Administrative   : ${state}
- › Postal Code      : ${pincode}
-`.trim();
-
-    return res.status(200).send(report);
-
-  } catch (err) {
-    return res.status(200).send(`
-┌────────────────────────────────────────────────────────────┐
-│                  🔥 SYSTEM EXCEPTION LOG                   │
-├────────────────────────────────────────────────────────────┤
-│ [!] Status Code  : 500 Internal Error                      │
-│ [!] Details      : Database query timeout or node failure. │
-└────────────────────────────────────────────────────────────┘
-    `.trim());
+  } catch (error) {
+    return res.status(500).json({
+      status: false,
+      code: 500,
+      developer: "Kalua",
+      channel: "@KaluaApiStore",
+      error: "Database lookup failed or connection timeout.",
+      details: error.message
+    });
   }
 };
