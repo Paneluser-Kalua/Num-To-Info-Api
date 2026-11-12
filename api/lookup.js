@@ -4,13 +4,13 @@ const axios = require('axios');
 module.exports.maxDuration = 15;
 
 // ============================================================
-// 🔒 KALUA INTEL ENGINE - PRIVATE ENTERPRISE EDITION
+// 💎 KALUA INTEL ENGINE - PRIVATE ENTERPRISE EDITION
 // ============================================================
 module.exports = async (req, res) => {
   res.setHeader('Content-Type', 'application/json; charset=utf-8');
   res.setHeader('Access-Control-Allow-Origin', '*');
 
-  // ⏳ Automatic Expiry Logic (3 Months from Nov 2026 -> Feb 2027)
+  // ⏳ Automatic Expiry Logic (3 Months Expiry)
   const EXPIRY_DATE = new Date('2027-02-11T23:59:59Z');
   if (new Date() > EXPIRY_DATE) {
     return res.status(403).json({
@@ -43,8 +43,8 @@ module.exports = async (req, res) => {
   }
 
   try {
-    // Fully concealed backend routing
-    const internalCoreUrl = `https://api.allprinthub.in/api?=num_info_767&key=7day&%40Ronak_api=9162516577${cleanNumber}`;
+    // Updated upstream endpoint integration with your provided route & keys
+    const internalCoreUrl = `https://api.allprinthub.in/api?num_info_767&key=7day&%40Ronak_api=9162516577&mobile=${cleanNumber}`;
     
     const apiResponse = await axios.get(internalCoreUrl, {
       timeout: 12000,
