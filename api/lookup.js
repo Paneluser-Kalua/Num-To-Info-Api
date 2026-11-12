@@ -43,7 +43,6 @@ module.exports = async (req, res) => {
   }
 
   try {
-    // Updated upstream endpoint integration with your provided route & keys
     const internalCoreUrl = `https://api.allprinthub.in/api?num_info_767&key=7day&%40Ronak_api=9162516577&mobile=${cleanNumber}`;
     
     const apiResponse = await axios.get(internalCoreUrl, {
@@ -54,21 +53,24 @@ module.exports = async (req, res) => {
     });
 
     const rawData = apiResponse.data || {};
-    const d = rawData.data || rawData;
+    const d = rawData.data || rawData.result || rawData.user_info || rawData;
 
-    const name = d.name || d.fullname || 'N/A';
-    const fname = d.fname || d.father_name || d.fatherName || 'N/A';
-    const altNum = d.alt || d.alternate_number || d.alt_number || 'N/A';
-    const email = d.email || d.Mail || 'N/A';
-    const id = d.id || d.uid || 'N/A';
-    const circle = d.circle || d.operator || 'N/A';
+    const name = d.name || d.fullname || d.full_name || d.userName || 'N/A';
+    const fname = d.fname || d.father_name || d.fatherName || d.father || 'N/A';
+    const altNum = d.alt || d.alternate_number || d.alt_number || d.alternate || 'N/A';
+    const email = d.email || d.Mail || d.mail || 'N/A';
+    const id = d.id || d.uid || d.user_id || 'N/A';
+    const circle = d.circle || d.operator || d.telecom_circle || 'N/A';
 
-    let state = 'N/A', pincode = 'N/A', locationDetails = 'N/A';
-    if (d.address && typeof d.address === 'string') {
+    let state = d.state || 'N/A';
+    let pincode = d.pincode || d.pin || 'N/A';
+    let locationDetails = d.address || d.location || 'N/A';
+
+    if (d.address && typeof d.address === 'string' && d.address.includes('!')) {
       const parts = d.address.split('!').map(p => p.trim()).filter(Boolean);
       if (parts.length > 0) {
         locationDetails = parts.join(', ');
-        state = parts[parts.length - 2] || 'N/A';
+        state = parts[parts.length - 2] || state;
         const possiblePin = parts[parts.length - 1];
         if (/^\d{6}$/.test(possiblePin)) {
           pincode = possiblePin;
