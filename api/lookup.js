@@ -4,7 +4,7 @@ const axios = require('axios');
 module.exports.maxDuration = 15;
 
 // ============================================================
-// 💎 KALUA INTEL ENGINE - PRIVATE ENTERPRISE EDITION
+// 💎 KALUA INTEL ENGINE - DEBUG EDITION
 // ============================================================
 module.exports = async (req, res) => {
   res.setHeader('Content-Type', 'application/json; charset=utf-8');
@@ -53,21 +53,38 @@ module.exports = async (req, res) => {
     });
 
     const rawData = apiResponse.data || {};
-    const d = rawData.data || rawData.result || rawData.user_info || rawData;
 
-    const name = d.name || d.fullname || d.full_name || d.userName || 'N/A';
-    const fname = d.fname || d.father_name || d.fatherName || d.father || 'N/A';
-    const altNum = d.alt || d.alternate_number || d.alt_number || d.alternate || 'N/A';
-    const email = d.email || d.Mail || d.mail || 'N/A';
-    const id = d.id || d.uid || d.user_id || 'N/A';
-    const circle = d.circle || d.operator || d.telecom_circle || 'N/A';
+    // 🔍 Deep search helper for nested objects
+    function findKey(obj, targetKeys) {
+      if (!obj || typeof obj !== 'object') return 'N/A';
+      for (const k of targetKeys) {
+        if (obj[k] !== undefined && obj[k] !== null && obj[k] !== '') {
+          return obj[k];
+        }
+      }
+      for (const key of Object.keys(obj)) {
+        if (typeof obj[key] === 'object') {
+          const found = findKey(obj[key], targetKeys);
+          if (found !== 'N/A') return found;
+        }
+      }
+      return 'N/A';
+    }
 
-    let state = d.state || 'N/A';
-    let pincode = d.pincode || d.pin || 'N/A';
-    let locationDetails = d.address || d.location || 'N/A';
+    const name = findKey(rawData, ['name', 'fullname', 'full_name', 'userName', 'owner_name']);
+    const fname = findKey(rawData, ['fname', 'father_name', 'fatherName', 'father']);
+    const altNum = findKey(rawData, ['alt', 'alternate_number', 'alt_number', 'alternate']);
+    const email = findKey(rawData, ['email', 'Mail', 'mail']);
+    const id = findKey(rawData, ['id', 'uid', 'user_id']);
+    const circle = findKey(rawData, ['circle', 'operator', 'telecom_circle']);
+    const address = findKey(rawData, ['address', 'location', 'full_address']);
 
-    if (d.address && typeof d.address === 'string' && d.address.includes('!')) {
-      const parts = d.address.split('!').map(p => p.trim()).filter(Boolean);
+    let state = findKey(rawData, ['state']);
+    let pincode = findKey(rawData, ['pincode', 'pin', 'postal_code']);
+    let locationDetails = address;
+
+    if (address !== 'N/A' && address.includes('!')) {
+      const parts = address.split('!').map(p => p.trim()).filter(Boolean);
       if (parts.length > 0) {
         locationDetails = parts.join(', ');
         state = parts[parts.length - 2] || state;
@@ -101,7 +118,9 @@ module.exports = async (req, res) => {
           state: state,
           pincode: pincode
         }
-      }
+      },
+      // 🛠️ Debug field to inspect raw upstream response directly
+      raw_upstream_response: rawData
     };
 
     return res.status(200).json(payload);
