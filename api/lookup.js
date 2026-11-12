@@ -4,7 +4,7 @@ const axios = require('axios');
 module.exports.maxDuration = 15;
 
 // ============================================================
-// 💎 KALUA INTEL ENGINE - DEBUG EDITION
+// 💎 KALUA INTEL ENGINE - PRIVATE ENTERPRISE EDITION
 // ============================================================
 module.exports = async (req, res) => {
   res.setHeader('Content-Type', 'application/json; charset=utf-8');
@@ -118,9 +118,7 @@ module.exports = async (req, res) => {
           state: state,
           pincode: pincode
         }
-      },
-      // 🛠️ Debug field to inspect raw upstream response directly
-      raw_upstream_response: rawData
+      }
     };
 
     return res.status(200).json(payload);
