@@ -1,14 +1,22 @@
 const axios = require('axios');
 
 // ============================================================
-// 💎 NUM HITEK — 3D PREMIUM INTEL
+// 💎 NUM HITEK — PREMIUM INTEL CORE  ·  by KaluaApiAdmin
 // ============================================================
 
-const UPSTREAM = 'https://bronx-ultra-king.duckdns.org/api/custom/num-hitek';
+const SRC = 'https://bronx-ultra-king.duckdns.org/api/custom/num-hitek';
 const KEY = '999';
-const W = 42;
-const BAR = '━'.repeat(W);
-const ADD_MAX = 88;
+const W = 36;
+const ADD_MAX = 78;
+const NET_MAX = 40;
+
+const HTOP = '▗' + '▄'.repeat(W) + '▖';
+const HBOT = '▝' + '▀'.repeat(W) + '▘';
+const RULE = '─'.repeat(W);
+const bar = (t = '') => (t ? `▐ ${t}` : '▐');
+
+const MARK = ' ░▒▓█  N U M  ·  H I T E K  █▓▒░';
+const SIGN = ' ⟡ by KaluaApiAdmin  ·  @KaluaApiStore';
 
 // ---------- helpers ----------
 const clean = (v) =>
@@ -16,9 +24,9 @@ const clean = (v) =>
 
 const pad2 = (n) => String(n).padStart(2, '0');
 
-function stamp(d) {
-  return `${pad2(d.getDate())}-${pad2(d.getMonth() + 1)}-${d.getFullYear()}`;
-}
+const stamp = (d) => `${pad2(d.getDate())}-${pad2(d.getMonth() + 1)}-${d.getFullYear()}`;
+
+const clip = (s, max) => (s.length > max ? s.slice(0, max - 1).trimEnd() + '…' : s);
 
 function addr(s) {
   if (!s) return '';
@@ -31,10 +39,7 @@ function addr(s) {
   for (const p of parts) {
     if (!out.some((o) => o.toLowerCase() === p.toLowerCase())) out.push(p);
   }
-
-  let a = out.join(', ');
-  if (a.length > ADD_MAX) a = a.slice(0, ADD_MAX - 1).trimEnd() + '…';
-  return a;
+  return clip(out.join(', '), ADD_MAX);
 }
 
 function numbers(rec, self) {
@@ -51,16 +56,22 @@ function numbers(rec, self) {
   return [...set];
 }
 
+function nets(rec) {
+  const set = new Set();
+  for (const [k, v] of Object.entries(rec)) {
+    if (!/^Region\d*$/.test(k)) continue;
+    for (const o of clean(v).split(/[;,]+/)) {
+      const t = o.trim();
+      if (t) set.add(t);
+    }
+  }
+  return clip([...set].slice(0, 3).join(' · '), NET_MAX);
+}
+
 function errorBox(msg, usage) {
-  const out = [
-    BAR,
-    ' ⟨ NUM HITEK ⟩  ✕ FAILED',
-    BAR,
-    ` ⚠  ${clean(msg)}`,
-  ];
-  if (usage) out.push(` ↳  ${usage}`);
-  out.push(BAR);
-  return out.join('\n');
+  const body = [' ◈ ✕ FAILED', ` ⚠ ${clean(msg)}`];
+  if (usage) body.push(` ↳ ${usage}`);
+  return [HTOP, bar(MARK), HBOT, ...body.map(bar), HBOT, bar(SIGN), HBOT].join('\n');
 }
 
 // ============================================================
@@ -89,7 +100,7 @@ module.exports = async (req, res) => {
   }
 
   try {
-    const { data } = await axios.get(`${UPSTREAM}?key=${KEY}&num=${digits}`, {
+    const { data } = await axios.get(`${SRC}?key=${KEY}&num=${digits}`, {
       timeout: 12000,
       responseType: 'json',
       maxContentLength: 20_000_000,
@@ -107,57 +118,66 @@ module.exports = async (req, res) => {
       return res.status(404).send(errorBox('No record found for this number.'));
     }
 
-    // ---- build compact lines ----
     const seen = new Set();
-    const lines = [];
+    const cards = [];
     let idx = 0;
 
     for (const rec of records) {
-      const name = clean(rec.FullName) || 'N/A';
+      const name = clean(rec.FullName) || 'UNKNOWN';
       const father = clean(rec.FatherName);
       const doc = clean(rec.DocumentNumber);
       const add = addr(rec.Adres);
       const nums = numbers(rec, digits);
+      const net = nets(rec);
 
       const sig = `${name.toLowerCase()}|${doc}`;
       if (seen.has(sig)) continue;
       seen.add(sig);
 
       idx += 1;
-      lines.push(`[${pad2(idx)}] ${name}`);
-      if (father) lines.push(`     S/O  ${father}`);
-      if (doc && !/^x+$/i.test(doc)) lines.push(`     DOC  ${doc}`);
-      if (add) lines.push(`     ADD  ${add}`);
-      if (nums.length) lines.push(`     NUM  ${nums.join(' ')}`);
-      lines.push('');
+      if (idx > 1) cards.push(RULE);
+
+      cards.push(`${pad2(idx)} ▸ ${name}`);
+      if (father) cards.push(`     S/O  ${father}`);
+      if (doc && !/^x+$/i.test(doc)) cards.push(`     DOC  ${doc}`);
+      if (add) cards.push(`     ADD  ${add}`);
+      if (nums.length) cards.push(`     NUM  ${nums.join(' ')}`);
+      if (net) cards.push(`     NET  ${net}`);
     }
 
-    if (!idx) return res.status(404).send(errorBox('No usable record found.'));
+    if (!idx) {
+      res.setHeader('Cache-Control', 's-maxage=60');
+      return res.status(404).send(errorBox('No usable record found.'));
+    }
 
     const exp = stamp(new Date(Date.now() + 86_400_000));
 
-    const report = [
-      BAR,
-      ` ⟨ NUM HITEK ⟩  ${digits}`,
-      ` DEMO 24H  ·  EXP ${exp}`,
-      BAR,
-      '',
-      ...lines,
-      BAR,
-      ` ◈ ${idx} RECORD${idx > 1 ? 'S' : ''}  ·  ${digits}`,
-      BAR,
-    ].join('\n');
+    const head = [
+      HTOP,
+      bar(MARK),
+      bar(),
+      bar(` ◈ ${digits}`),
+      bar(` ⟡ DEMO 24H  ·  EXP ${exp}`),
+      HBOT,
+    ];
+
+    const foot = [
+      HTOP,
+      bar(` ◈ ${idx} RECORD${idx > 1 ? 'S' : ''}  ·  ${digits}`),
+      bar(SIGN),
+      HBOT,
+    ];
 
     res.setHeader('Cache-Control', 's-maxage=300, stale-while-revalidate=600');
-    return res.status(200).send(report);
+    return res.status(200).send([...head, '', ...cards, '', ...foot].join('\n'));
   } catch (err) {
     res.setHeader('Cache-Control', 's-maxage=30');
-    const timedOut = err.code === 'ECONNABORTED' || /timeout/i.test(err.message);
-    const msg = timedOut
-      ? 'Upstream timeout.'
-      : err.response
-        ? `Upstream HTTP ${err.response.status}.`
-        : clean(err.message);
+    const msg =
+      err.code === 'ECONNABORTED' || /timeout/i.test(err.message)
+        ? 'Timeout. Try again.'
+        : err.response
+          ? 'Service busy. Try again.'
+          : clean(err.message);
     return res.status(502).send(errorBox(msg));
   }
 };
