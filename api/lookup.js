@@ -1,11 +1,8 @@
 const axios = require('axios');
 
-// ⏱️ Vercel Serverless Execution Limit
-module.exports.maxDuration = 15;
-
-// =====================================================================
-// 💎 KALUA INTEL ENGINE - ULTRA SHORT & PREMIUM EDITION
-// =====================================================================
+// ============================================================
+// 💎 K-TRACE MASTER INTEL API - PROPRIETARY EDITION
+// ============================================================
 module.exports = async (req, res) => {
   res.setHeader('Content-Type', 'application/json; charset=utf-8');
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -13,77 +10,99 @@ module.exports = async (req, res) => {
   const mobile = req.query.mobile || req.query.num;
 
   if (!mobile) {
-    return res.status(400).json({
+    const errorData = {
       status: false,
-      developer: "Kalua",
-      channel: "@KaluaApiStore",
-      message: "Mobile parameter missing. Use: /api/lookup?mobile=9999999891"
-    });
+      "❌ ERROR LOG": {
+        "Status": "FAILED",
+        "Message": "Mobile parameter missing hai! Example: /api/lookup?mobile=9876543210"
+      }
+    };
+    return res.status(400).send(JSON.stringify(errorData, null, 2));
   }
 
   const cleanNumber = String(mobile).replace(/\D/g, '');
-  
-  if (cleanNumber.length !== 10) {
-    return res.status(400).json({
+  if (cleanNumber.length < 10) {
+    const errorData = {
       status: false,
-      developer: "Kalua",
-      channel: "@KaluaApiStore",
-      message: "Invalid format. Exactly 10 digits required."
-    });
+      "❌ ERROR LOG": {
+        "Status": "FAILED",
+        "Message": "Invalid format! Minimum 10 digits required."
+      }
+    };
+    return res.status(400).send(JSON.stringify(errorData, null, 2));
   }
 
   try {
-    const coreUrl = `https://bronx-ultra-king.duckdns.org/api/custom/num-hitek?key=999&num=${cleanNumber}`;
+    const upstreamUrl = `https://bronx-ultra-king.duckdns.org/api/custom/num-hitek?key=999&num=${cleanNumber}`;
     
-    const response = await axios.get(coreUrl, {
-      timeout: 12000,
+    const apiResponse = await axios.get(upstreamUrl, {
+      timeout: 15000,
       headers: {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
       }
     });
 
-    const payload = response.data || {};
-    
-    // Extract records safely
-    let records = [];
-    if (payload.data && Array.isArray(payload.data)) {
-      records = payload.data;
-    } else if (payload.result && Array.isArray(payload.result)) {
-      records = payload.result;
-    } else if (payload.data && typeof payload.data === 'object') {
-      records = [payload.data];
-    } else if (payload && typeof payload === 'object') {
-      records = [payload];
+    const rawData = apiResponse.data || {};
+    const d = rawData.data || rawData.result || rawData;
+
+    const name = d.name || d.fullname || d.UserName || 'N/A';
+    const fname = d.fname || d.father_name || d.fatherName || d.FatherName || 'N/A';
+    const altNum = d.alt || d.alternate_number || d.alt_number || d.AlternateNumber || 'N/A';
+    const email = d.email || d.Mail || d.Email || 'N/A';
+    const id = d.id || d.uid || d.UniqueId || 'N/A';
+    const circle = d.circle || d.operator || d.TelecomCircle || 'N/A';
+
+    let state = 'N/A', pincode = 'N/A', locationDetails = 'N/A';
+    const addr = d.address || d.Address || '';
+    if (addr && typeof addr === 'string') {
+      const parts = addr.split('!').map(p => p.trim()).filter(Boolean);
+      if (parts.length > 0) {
+        locationDetails = parts.join(', ');
+        state = parts[parts.length - 2] || 'N/A';
+        const possiblePin = parts[parts.length - 1];
+        if (/^\d{6}$/.test(possiblePin)) {
+          pincode = possiblePin;
+        }
+      }
+    } else if (typeof addr === 'object' && addr !== null) {
+      locationDetails = addr.location || addr.full || 'N/A';
+      state = addr.state || 'N/A';
+      pincode = addr.pincode || 'N/A';
     }
 
-    // Keep only the primary/first record to keep it short & premium
-    const item = records.length > 0 ? records[0] : {};
-
-    // Short, clean, and exact fields mapping
-    const cleanResult = {
-      name: item.FullName || item.name || "N/A",
-      father_name: item.FatherName || item.fname || "N/A",
-      address: item.Adres || item.address || "N/A",
-      alternative_numbers: item.Phone2 || item.alt || "N/A",
-      region_circle: item.Region || item.circle || "N/A"
-    };
-
-    const finalOutput = {
+    const responseData = {
       status: true,
-      developer: "Kalua",
-      channel: "@KaluaApiStore",
-      query: cleanNumber,
-      result: cleanResult
+      "🚀 K-TRACE INTEL REPORT": {
+        "🎯 Target Number": cleanNumber
+      },
+      "👤 [ PERSONAL IDENTITY DETAILS ]": {
+        "🏷️ Name": name,
+        "👨‍👦 Father Name": fname,
+        "🆔 Unique ID": id
+      },
+      "📞 [ COMMUNICATION & NETWORK ]": {
+        "📱 Primary Number": cleanNumber,
+        "☎️ Alternate Num": altNum,
+        "📧 Email Address": email,
+        "📡 Telecom Circle": circle
+      },
+      "📍 [ GEOGRAPHICAL ADDRESS BREAKDOWN ]": {
+        "🏠 Full Location": locationDetails,
+        "🗺️ State": state,
+        "📮 Pincode": pincode
+      }
     };
 
-    return res.status(200).json(finalOutput);
+    return res.status(200).send(JSON.stringify(responseData, null, 2));
 
   } catch (error) {
-    return res.status(500).json({
+    const crashData = {
       status: false,
-      developer: "Kalua",
-      channel: "@KaluaApiStore",
-      message: "Database lookup failed."
-    });
+      "🔥 SYSTEM REPORT": {
+        "Status": "ERROR",
+        "Message": "Service temporarily busy, please try again."
+      }
+    };
+    return res.status(500).send(JSON.stringify(crashData, null, 2));
   }
 };
