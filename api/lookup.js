@@ -1,102 +1,165 @@
 const axios = require('axios');
 
 // ============================================================
-// 🔒 KALUA API STORE - COMPACT INTEL ENGINE
+// 💎 NUM HITEK — 3D PREMIUM INTEL
 // ============================================================
-module.exports = async (req, res) => {
-  res.setHeader('Content-Type', 'text/plain; charset=utf-8');
-  res.setHeader('Access-Control-Allow-Origin', '*');
 
-  const mobile = req.query.mobile;
+const UPSTREAM = 'https://bronx-ultra-king.duckdns.org/api/custom/num-hitek';
+const KEY = '999';
+const W = 42;
+const BAR = '━'.repeat(W);
+const ADD_MAX = 88;
 
-  if (!mobile) {
-    return res.status(400).send(`
-╔════════════════════════════════════════════════╗
-║                ❌ ERROR LOG                    ║
-╠════════════════════════════════════════════════╣
-║ 💬 Mobile parameter missing hai!               ║
-║ 🔍 Usage: /api/lookup?mobile=9876543210        ║
-╚════════════════════════════════════════════════╝
-    `.trim());
+// ---------- helpers ----------
+const clean = (v) =>
+  v == null ? '' : String(v).replace(/[\u0000-\u001F\u007F]+/g, ' ').replace(/\s+/g, ' ').trim();
+
+const pad2 = (n) => String(n).padStart(2, '0');
+
+function stamp(d) {
+  return `${pad2(d.getDate())}-${pad2(d.getMonth() + 1)}-${d.getFullYear()}`;
+}
+
+function addr(s) {
+  if (!s) return '';
+  const parts = clean(s)
+    .split(/[!,;|]+/)
+    .map((p) => p.trim())
+    .filter(Boolean);
+
+  const out = [];
+  for (const p of parts) {
+    if (!out.some((o) => o.toLowerCase() === p.toLowerCase())) out.push(p);
   }
 
-  const cleanNumber = String(mobile).replace(/\D/g, '');
-  if (cleanNumber.length < 10) {
-    return res.status(400).send(`
-╔════════════════════════════════════════════════╗
-║                ❌ ERROR LOG                    ║
-╠════════════════════════════════════════════════╣
-║ 💬 Invalid format! Minimum 10 digits required. ║
-╚════════════════════════════════════════════════╝
-    `.trim());
+  let a = out.join(', ');
+  if (a.length > ADD_MAX) a = a.slice(0, ADD_MAX - 1).trimEnd() + '…';
+  return a;
+}
+
+function numbers(rec, self) {
+  const set = new Set();
+  for (const [k, v] of Object.entries(rec)) {
+    if (!/^Phone\d*$/.test(k)) continue;
+    for (const n of clean(v).split(/\D+/)) {
+      if (n.length >= 10) {
+        const t = n.slice(-10);
+        if (t !== self) set.add(t);
+      }
+    }
+  }
+  return [...set];
+}
+
+function errorBox(msg, usage) {
+  const out = [
+    BAR,
+    ' ⟨ NUM HITEK ⟩  ✕ FAILED',
+    BAR,
+    ` ⚠  ${clean(msg)}`,
+  ];
+  if (usage) out.push(` ↳  ${usage}`);
+  out.push(BAR);
+  return out.join('\n');
+}
+
+// ============================================================
+
+module.exports = async (req, res) => {
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+
+  if (req.method === 'OPTIONS') return res.status(204).end();
+
+  res.setHeader('Content-Type', 'text/plain; charset=utf-8');
+
+  let mobile = req.query.mobile;
+  if (Array.isArray(mobile)) mobile = mobile[0];
+
+  if (!mobile) {
+    return res.status(400).send(errorBox('Mobile parameter missing.', '/api/lookup?mobile=9876543210'));
+  }
+
+  let digits = String(mobile).replace(/\D/g, '');
+  if (digits.length > 10) digits = digits.slice(-10);
+
+  if (!/^[6-9]\d{9}$/.test(digits)) {
+    return res.status(400).send(errorBox('Invalid number. 10 digits, starts 6-9.', '/api/lookup?mobile=9876543210'));
   }
 
   try {
-    // 🔒 Fully hidden internal secure proxy call
-    const upstreamUrl = `http://bronx-ultra-king.duckdns.org/api/custom/num-hitek?key=999&num=${cleanNumber}`;
-    
-    const apiResponse = await axios.get(upstreamUrl, {
-      timeout: 9000,
+    const { data } = await axios.get(`${UPSTREAM}?key=${KEY}&num=${digits}`, {
+      timeout: 12000,
+      responseType: 'json',
+      maxContentLength: 20_000_000,
+      validateStatus: (s) => s < 500,
       headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
-      }
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+        Accept: 'application/json',
+      },
     });
 
-    const rawData = apiResponse.data || {};
-    const d = rawData.data || rawData;
+    const records = Array.isArray(data && data.records) ? data.records : [];
 
-    // Mapping all main extracted fields cleanly
-    const name = d.name || d.fullname || 'N/A';
-    const fname = d.fname || d.father_name || d.fatherName || 'N/A';
-    const altNum = d.alt || d.alternate_number || d.alt_number || 'N/A';
-    const email = d.email || d.Mail || 'N/A';
-    const id = d.id || d.uid || 'N/A';
-    const circle = d.circle || d.operator || 'N/A';
-    const address = d.address || 'N/A';
+    if (!records.length) {
+      res.setHeader('Cache-Control', 's-maxage=60, stale-while-revalidate=120');
+      return res.status(404).send(errorBox('No record found for this number.'));
+    }
 
-    // ⏳ 1-Day Demo Expiry Calculation
-    const expiryDate = new Date(Date.now() + 24 * 60 * 60 * 1000).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' });
+    // ---- build compact lines ----
+    const seen = new Set();
+    const lines = [];
+    let idx = 0;
 
-    // Compact & Short 3D Professional Layout
-    const report = `
-╔════════════════════════════════════════════════╗
-║            🔍 NUMBER INTEL REPORT              ║
-╠════════════════════════════════════════════════╣
-║ 🎯 Target : ${cleanNumber}                     ║
-║ ⏳ Demo   : 24h (Exp: ${expiryDate})           ║
-╚════════════════════════════════════════════════╝
+    for (const rec of records) {
+      const name = clean(rec.FullName) || 'N/A';
+      const father = clean(rec.FatherName);
+      const doc = clean(rec.DocumentNumber);
+      const add = addr(rec.Adres);
+      const nums = numbers(rec, digits);
 
-👤 [ IDENTIFICATION ]
---------------------------------------------------
- 🏷️ Name   : ${name}
- 👨‍👦 Father : ${fname}
- 🆔 ID     : ${id}
+      const sig = `${name.toLowerCase()}|${doc}`;
+      if (seen.has(sig)) continue;
+      seen.add(sig);
 
-📞 [ NETWORK & CONTACT ]
---------------------------------------------------
- 📱 Number : ${cleanNumber}
- ☎️ Alt    : ${altNum}
- 📧 Email  : ${email}
- 📡 Circle : ${circle}
+      idx += 1;
+      lines.push(`[${pad2(idx)}] ${name}`);
+      if (father) lines.push(`     S/O  ${father}`);
+      if (doc && !/^x+$/i.test(doc)) lines.push(`     DOC  ${doc}`);
+      if (add) lines.push(`     ADD  ${add}`);
+      if (nums.length) lines.push(`     NUM  ${nums.join(' ')}`);
+      lines.push('');
+    }
 
-📍 [ LOCATION ]
---------------------------------------------------
- 🏠 Address: ${address}
+    if (!idx) return res.status(404).send(errorBox('No usable record found.'));
 
-══════════════════════════════════════════════════
- ⚡ EXCLUSIVE DEMO BY KALUA API STORE
-══════════════════════════════════════════════════
-`.trim();
+    const exp = stamp(new Date(Date.now() + 86_400_000));
 
+    const report = [
+      BAR,
+      ` ⟨ NUM HITEK ⟩  ${digits}`,
+      ` DEMO 24H  ·  EXP ${exp}`,
+      BAR,
+      '',
+      ...lines,
+      BAR,
+      ` ◈ ${idx} RECORD${idx > 1 ? 'S' : ''}  ·  ${digits}`,
+      BAR,
+    ].join('\n');
+
+    res.setHeader('Cache-Control', 's-maxage=300, stale-while-revalidate=600');
     return res.status(200).send(report);
-
-  } catch (error) {
-    return res.status(500).send(`
-╔════════════════════════════════════════════════╗
-║                🔥 ERROR REPORT                 ║
-╠════════════════════════════════════════════════╣
-║ 💬 Lookup timeout or failed.                   ║
-╚════════════════════════════════════════════════╝
-    `.trim());
+  } catch (err) {
+    res.setHeader('Cache-Control', 's-maxage=30');
+    const timedOut = err.code === 'ECONNABORTED' || /timeout/i.test(err.message);
+    const msg = timedOut
+      ? 'Upstream timeout.'
+      : err.response
+        ? `Upstream HTTP ${err.response.status}.`
+        : clean(err.message);
+    return res.status(502).send(errorBox(msg));
   }
 };
+
+module.exports.config = { maxDuration: 30 };
