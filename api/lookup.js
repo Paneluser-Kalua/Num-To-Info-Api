@@ -1,22 +1,23 @@
 const axios = require('axios');
 
 // ============================================================
-// 💎 NUM HITEK — PREMIUM INTEL CORE  ·  by KaluaApiAdmin
+// 💎 NUM HITEK — CLEAN REPORT  ·  by KaluaApiAdmin
 // ============================================================
 
 const SRC = 'https://bronx-ultra-king.duckdns.org/api/custom/num-hitek';
 const KEY = '999';
-const W = 36;
-const ADD_MAX = 78;
-const NET_MAX = 40;
+const W = 34;
+const ADD_MAX = 74;
+const NET_MAX = 38;
+const DEMO_DAYS = 3;
 
 const HTOP = '▗' + '▄'.repeat(W) + '▖';
 const HBOT = '▝' + '▀'.repeat(W) + '▘';
-const RULE = '─'.repeat(W);
+const RULE = ' ' + '─'.repeat(W);
 const bar = (t = '') => (t ? `▐ ${t}` : '▐');
 
-const MARK = ' ░▒▓█  N U M  ·  H I T E K  █▓▒░';
-const SIGN = ' ⟡ by KaluaApiAdmin  ·  @KaluaApiStore';
+const MARK = ' ◈ N U M   H I T E K';
+const SIGN = ' by KaluaApiAdmin  ·  @KaluaApiStore';
 
 // ---------- helpers ----------
 const clean = (v) =>
@@ -27,6 +28,8 @@ const pad2 = (n) => String(n).padStart(2, '0');
 const stamp = (d) => `${pad2(d.getDate())}-${pad2(d.getMonth() + 1)}-${d.getFullYear()}`;
 
 const clip = (s, max) => (s.length > max ? s.slice(0, max - 1).trimEnd() + '…' : s);
+
+const field = (label, value) => `     ${label.padEnd(8)} : ${value}`;
 
 function addr(s) {
   if (!s) return '';
@@ -69,8 +72,8 @@ function nets(rec) {
 }
 
 function errorBox(msg, usage) {
-  const body = [' ◈ ✕ FAILED', ` ⚠ ${clean(msg)}`];
-  if (usage) body.push(` ↳ ${usage}`);
+  const body = [' ✕ NOT WORKING', ` Reason : ${clean(msg)}`];
+  if (usage) body.push(` How to : ${usage}`);
   return [HTOP, bar(MARK), HBOT, ...body.map(bar), HBOT, bar(SIGN), HBOT].join('\n');
 }
 
@@ -89,14 +92,14 @@ module.exports = async (req, res) => {
   if (Array.isArray(mobile)) mobile = mobile[0];
 
   if (!mobile) {
-    return res.status(400).send(errorBox('Mobile parameter missing.', '/api/lookup?mobile=9876543210'));
+    return res.status(400).send(errorBox('Number is missing.', '/api/lookup?mobile=9876543210'));
   }
 
   let digits = String(mobile).replace(/\D/g, '');
   if (digits.length > 10) digits = digits.slice(-10);
 
   if (!/^[6-9]\d{9}$/.test(digits)) {
-    return res.status(400).send(errorBox('Invalid number. 10 digits, starts 6-9.', '/api/lookup?mobile=9876543210'));
+    return res.status(400).send(errorBox('Number must be 10 digits, starting 6-9.', '/api/lookup?mobile=9876543210'));
   }
 
   try {
@@ -137,12 +140,12 @@ module.exports = async (req, res) => {
       idx += 1;
       if (idx > 1) cards.push(RULE);
 
-      cards.push(`${pad2(idx)} ▸ ${name}`);
-      if (father) cards.push(`     S/O  ${father}`);
-      if (doc && !/^x+$/i.test(doc)) cards.push(`     DOC  ${doc}`);
-      if (add) cards.push(`     ADD  ${add}`);
-      if (nums.length) cards.push(`     NUM  ${nums.join(' ')}`);
-      if (net) cards.push(`     NET  ${net}`);
+      cards.push(` ${pad2(idx)} ▸ Name     : ${name}`);
+      if (father) cards.push(field('Father', father));
+      if (doc && !/^x+$/i.test(doc)) cards.push(field('ID', doc));
+      if (add) cards.push(field('Address', add));
+      if (nums.length) cards.push(field('Numbers', nums.join(' ')));
+      if (net) cards.push(field('Network', net));
     }
 
     if (!idx) {
@@ -150,20 +153,21 @@ module.exports = async (req, res) => {
       return res.status(404).send(errorBox('No usable record found.'));
     }
 
-    const exp = stamp(new Date(Date.now() + 86_400_000));
+    const exp = stamp(new Date(Date.now() + DEMO_DAYS * 86_400_000));
 
     const head = [
       HTOP,
       bar(MARK),
       bar(),
-      bar(` ◈ ${digits}`),
-      bar(` ⟡ DEMO 24H  ·  EXP ${exp}`),
+      bar(` Number  : ${digits}`),
+      bar(` Demo    : ${DEMO_DAYS} Days`),
+      bar(` Expires : ${exp}`),
       HBOT,
     ];
 
     const foot = [
       HTOP,
-      bar(` ◈ ${idx} RECORD${idx > 1 ? 'S' : ''}  ·  ${digits}`),
+      bar(` ◈ ${idx} record${idx > 1 ? 's' : ''} found`),
       bar(SIGN),
       HBOT,
     ];
@@ -174,9 +178,9 @@ module.exports = async (req, res) => {
     res.setHeader('Cache-Control', 's-maxage=30');
     const msg =
       err.code === 'ECONNABORTED' || /timeout/i.test(err.message)
-        ? 'Timeout. Try again.'
+        ? 'Timeout. Please try again.'
         : err.response
-          ? 'Service busy. Try again.'
+          ? 'Server busy. Please try again.'
           : clean(err.message);
     return res.status(502).send(errorBox(msg));
   }
