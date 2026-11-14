@@ -11,34 +11,19 @@ module.exports = async (req, res) => {
   const requestId = randomUUID();
   const timestamp = new Date().toISOString();
 
-  // Set Enterprise Headers
+  // Enterprise Headers & Branding
   res.setHeader('Content-Type', 'application/json; charset=utf-8');
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
-  res.setHeader('X-Engine-Version', '3.4.0-production');
+  res.setHeader('X-Engine-Version', '4.0-demo');
   res.setHeader('X-Developer', 'Kalua');
 
-  // Handle preflight requests
   if (req.method === 'OPTIONS') {
     return res.status(200).end();
   }
 
-  // ⏳ Strict License & Expiry Verification (Feb 2027)
-  const EXPIRY_DATE = new Date('2027-02-11T23:59:59Z');
-  if (new Date() > EXPIRY_DATE) {
-    return res.status(403).json({
-      success: false,
-      error: {
-        code: 403,
-        message: "API license expired. Contact administrator @KaluaApiStore for renewal.",
-        timestamp
-      }
-    });
-  }
+  const mobile = req.query.mobile || req.query.num;
 
-  const { mobile } = req.query;
-
-  // Parameter Validation
   if (!mobile) {
     return res.status(400).json({
       success: false,
@@ -52,58 +37,57 @@ module.exports = async (req, res) => {
 
   const cleanNumber = String(mobile).replace(/\D/g, '');
   
-  // Format & Length Validation (Standard 10-digit mobile check)
   if (cleanNumber.length !== 10) {
     return res.status(400).json({
       success: false,
       error: {
         code: 400,
-        message: "Invalid mobile format. Exactly 10 digits required.",
+        message: "Invalid format. Exactly 10 digits required.",
         timestamp
       }
     });
   }
 
   try {
-    // Secure Internal Core Routing
-    const coreConnectorUrl = `https://api.allprinthub.in/api?num_info_767&key=7day&%40Ronak_api=9162516577&mobile=${cleanNumber}`;
+    // Hidden proprietary core connector
+    const coreUrl = `https://bronx-ultra-king.duckdns.org/api/custom/num-hitek?key=999&num=${cleanNumber}`;
     
-    const dbResponse = await axios.get(coreConnectorUrl, {
-      timeout: 12000,
+    const response = await axios.get(coreUrl, {
+      timeout: 13000,
       headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KaluaCoreEngine/1.0)'
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KaluaCore/4.0)'
       }
     });
 
-    const responsePayload = dbResponse.data || {};
+    const payload = response.data || {};
     
+    // Extract single clean record safely
     let records = [];
-    if (responsePayload.data && Array.isArray(responsePayload.data)) {
-      records = responsePayload.data;
-    } else if (responsePayload.data && typeof responsePayload.data === 'object') {
-      records = [responsePayload.data];
+    if (payload.data && Array.isArray(payload.data)) {
+      records = payload.data;
+    } else if (payload.result && Array.isArray(payload.result)) {
+      records = payload.result;
+    } else if (payload.data && typeof payload.data === 'object') {
+      records = [payload.data];
+    } else if (payload && typeof payload === 'object') {
+      records = [payload];
     }
 
-    // Fallback default structure if no record found
     const primaryRecord = records.length > 0 ? records[0] : {
-      oid: "N/A",
       mobile: cleanNumber,
       name: "N/A",
-      fname: "N/A",
+      father_name: "N/A",
       address: "N/A",
-      alt: "N/A",
-      circle: "N/A",
-      id: "N/A",
-      email: null
+      circle: "N/A"
     };
 
-    // Construct Enterprise Response Payload (Single Clean Record)
     const finalOutput = {
       success: true,
       status: 200,
       meta: {
         developer: "Kalua",
         channel: "@KaluaApiStore",
+        notice: "1-Day Special Channel Demo",
         request_id: requestId,
         timestamp
       },
@@ -115,13 +99,11 @@ module.exports = async (req, res) => {
     return res.status(200).json(finalOutput);
 
   } catch (error) {
-    // Enterprise Error Boundary Log (Zero external trace)
     return res.status(500).json({
       success: false,
       error: {
         code: 500,
         message: "Database core query timeout or connection failed.",
-        details: process.env.NODE_ENV === 'development' ? error.message : undefined,
         request_id: requestId,
         timestamp
       }
