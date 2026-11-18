@@ -11,6 +11,9 @@ const TIMEOUT = 12000;
 const DEMO_DAYS = 1;
 const UPGRADE_MSG = 'pls upgrade premium by KaluaApiAdmin';
 
+const pad2 = (n) => String(n).padStart(2, '0');
+const stamp = (d) => `${pad2(d.getDate())}-${pad2(d.getMonth() + 1)}-${d.getFullYear()}`;
+
 // ---------- tiny cache ----------
 const CACHE = new Map();
 const TTL = 5 * 60 * 1000;
@@ -222,7 +225,8 @@ module.exports = async (req, res) => {
     const report = {
       ok: true,
       number: digits,
-      demo_days: DEMO_DAYS,
+      demo_days: `${DEMO_DAYS} Day`,
+      expires: stamp(new Date(Date.now() + DEMO_DAYS * 86_400_000)),
       count: records.length,
       records,
       message: UPGRADE_MSG
