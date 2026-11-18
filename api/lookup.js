@@ -4,7 +4,7 @@ const axios = require('axios');
 // 💎 NUM HITEK — CLEAN REPORT  ·  by KaluaApiAdmin
 // ============================================================
 
-const SRC = 'https://bronx-ultra-king.duckdns.org/api/custom/num-hitek';
+const SRC = 'https://api-munix.wisp.uno/number?number=%7Bnumber%7D&key=MUNIX-eIV68Wj9rrzp7l52NV1KTKTh5eNrhm';
 const KEY = '999';
 const W = 34;
 const ADD_MAX = 74;
