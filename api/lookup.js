@@ -1,36 +1,107 @@
+const crypto = require('crypto');
 const axios = require('axios');
 
 // ============================================================
-// 💎 NUM HITEK — JSON API · by prime07
+// 💎 NUM HITEK API  ·  1 Day Plan  ·  ₹6  ·  by prime07
 // ============================================================
 
+// ---------- PRIVATE (delete the || fallbacks if repo is public) ----------
 const BASE = (process.env.NH_BASE || 'https://api-munix.wisp.uno/number').trim();
-const KEY  = (process.env.NH_KEY  || 'MUNIX-eIV68Wj9rrzp7l52NV1KTKTh5eNrhm').trim();
-const PARAMS = ['number', 'num', 'mobile'];
+const UP_KEY = (process.env.NH_KEY || 'MUNIX-eIV68Wj9rrzp7l52NV1KTKTh5eNrhm').trim();
+
+const SERVICE = 'NUM HITEK';
+const VERSION = '1';
+const OWNER = 'prime07';
+
+const PLAN_HOURS = 24;
+const PLAN_PRICE_INR = 6;
+const PLAN_NAME = '1 Day';
+
+const ADD_MAX = 74;
+const NET_MAX = 38;
 const TIMEOUT = 12000;
-const DEMO_DAYS = 1;
-const UPGRADE_MSG = 'pls upgrade premium by KaluaApiAdmin';
+const RATE_LIMIT = 60;
+const RATE_WINDOW = 60_000;
+const PARAMS = ['number', 'num', 'mobile'];
 
-const pad2 = (n) => String(n).padStart(2, '0');
-const stamp = (d) => `${pad2(d.getDate())}-${pad2(d.getMonth() + 1)}-${d.getFullYear()}`;
+// ---------- client store ----------
+const KV_URL = process.env.KV_REST_API_URL || '';
+const KV_TOKEN = process.env.KV_REST_API_TOKEN || '';
+const USE_KV = !!(KV_URL && KV_TOKEN);
 
-// ---------- tiny cache ----------
-const CACHE = new Map();
-const TTL = 5 * 60 * 1000;
-const CACHE_MAX = 500;
+const MEM = new Map();
+let seeded = false;
 
-function cacheGet(k) {
-  const hit = CACHE.get(k);
-  if (!hit) return null;
-  if (Date.now() > hit.exp) { CACHE.delete(k); return null; }
-  return hit.val;
+function seed() {
+  if (seeded) return;
+  seeded = true;
+  try {
+    const raw = process.env.NH_CLIENTS;
+    if (!raw) return;
+    for (const [k, v] of Object.entries(JSON.parse(raw))) {
+      const exp = typeof v === 'string' ? v : v && v.expires_at;
+      if (!exp) continue;
+      MEM.set(k, {
+        key: k,
+        label: (v && v.label) || '',
+        created_at: new Date().toISOString(),
+        expires_at: exp,
+        hits: 0,
+      });
+    }
+  } catch {}
 }
-function cacheSet(k, val) {
-  if (CACHE.size >= CACHE_MAX) CACHE.delete(CACHE.keys().next().value);
-  CACHE.set(k, { val, exp: Date.now() + TTL });
+
+async function kv(cmd) {
+  const r = await fetch(`${KV_URL}/${cmd.map((c) => encodeURIComponent(c)).join('/')}`, {
+    headers: { Authorization: `Bearer ${KV_TOKEN}` },
+  });
+  if (!r.ok) throw new Error('store');
+  return r.json();
 }
 
-// ---------- schema-agnostic parsing ----------
+async function readKey(k) {
+  if (USE_KV) {
+    const j = await kv(['get', `nh:key:${k}`]);
+    const v = j && j.result;
+    return v ? JSON.parse(v) : null;
+  }
+  return MEM.get(k) || null;
+}
+
+async function writeKey(rec) {
+  if (USE_KV) return void (await kv(['set', `nh:key:${rec.key}`, JSON.stringify(rec)]));
+  MEM.set(rec.key, rec);
+}
+
+// ---------- helpers ----------
+const clean = (v) =>
+  v == null ? '' : String(v).replace(/[\u0000-\u001F\u007F]+/g, ' ').replace(/\s+/g, ' ').trim();
+
+const clip = (s, max) => (s.length > max ? s.slice(0, max - 1).trimEnd() + '…' : s);
+const rid = () => crypto.randomBytes(8).toString('hex');
+
+function safeEq(a, b) {
+  const A = Buffer.from(String(a));
+  const B = Buffer.from(String(b));
+  return A.length === B.length && crypto.timingSafeEqual(A, B);
+}
+
+// ---------- rate limit ----------
+const HITS = new Map();
+function limited(k) {
+  const now = Date.now();
+  const h = HITS.get(k);
+  if (!h || now > h.reset) {
+    HITS.set(k, { n: 1, reset: now + RATE_WINDOW });
+    return { ok: true, left: RATE_LIMIT - 1, reset: RATE_WINDOW };
+  }
+  h.n += 1;
+  if (h.n > RATE_LIMIT) return { ok: false, left: 0, reset: h.reset - now };
+  return { ok: true, left: RATE_LIMIT - h.n, reset: h.reset - now };
+}
+
+// ---------- tolerant parsing (raw shape never passes through) ----------
 const REC_KEY = /^(records?|data|result|results|response|list|items|rows)$/i;
 const FIELD_KEY =
   /^(full_?name|name|father_?name|father|adres|address|document_?number|document_?no|doc_?number|id|phone\d*|mobile\d*|region\d*|circle|operator|network)$/i;
@@ -59,11 +130,6 @@ function extractRecords(data) {
   return out;
 }
 
-const clean = (v) =>
-  v == null ? '' : String(v).replace(/[\u0000-\u001F\u007F]+/g, ' ').replace(/\s+/g, ' ').trim();
-
-const clip = (s, max) => (s.length > max ? s.slice(0, max - 1).trimEnd() + '…' : s);
-
 function pick(rec, names) {
   const lower = {};
   for (const [k, v] of Object.entries(rec)) lower[k.toLowerCase()] = v;
@@ -81,7 +147,7 @@ function addr(s) {
   for (const p of parts) {
     if (!out.some((o) => o.toLowerCase() === p.toLowerCase())) out.push(p);
   }
-  return clip(out.join(', '), 74);
+  return clip(out.join(', '), ADD_MAX);
 }
 
 function numbers(rec, self) {
@@ -107,7 +173,7 @@ function nets(rec) {
       if (t) set.add(t);
     }
   }
-  return clip([...set].slice(0, 3).join(' · '), 38);
+  return clip([...set].slice(0, 3).join(' · '), NET_MAX);
 }
 
 async function fetchRecords(digits) {
@@ -115,8 +181,7 @@ async function fetchRecords(digits) {
   for (const param of PARAMS) {
     const url = new URL(BASE);
     url.searchParams.set(param, digits);
-    url.searchParams.set('key', KEY);
-
+    url.searchParams.set('key', UP_KEY);
     try {
       const { data: raw } = await axios.get(url.toString(), {
         timeout: TIMEOUT,
@@ -127,12 +192,11 @@ async function fetchRecords(digits) {
         headers: {
           'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
           Accept: 'application/json, text/plain, */*',
+          'Accept-Encoding': 'gzip, deflate, br',
         },
       });
-
       let data;
       try { data = typeof raw === 'string' ? JSON.parse(raw) : raw; } catch { data = raw; }
-
       const records = extractRecords(data);
       if (records.length) return records;
     } catch (err) {
@@ -143,112 +207,261 @@ async function fetchRecords(digits) {
   return [];
 }
 
+function buildRecords(digits, raw) {
+  const seen = new Set();
+  const out = [];
+  for (const rec of raw) {
+    const name = pick(rec, ['FullName', 'full_name', 'Name', 'name']) || 'UNKNOWN';
+    const father = pick(rec, ['FatherName', 'father_name', 'Father', 'father']);
+    const doc = pick(rec, ['DocumentNumber', 'document_number', 'DocumentNo', 'DocNumber', 'Aadhaar', 'ID', 'id']);
+    const sig = `${name.toLowerCase()}|${doc}`;
+    if (seen.has(sig)) continue;
+    seen.add(sig);
+    out.push({
+      name,
+      father: father || null,
+      id: doc && !/^x+$/i.test(doc) ? doc : null,
+      address: addr(pick(rec, ['Adres', 'Address', 'address', 'ADD', 'add'])) || null,
+      numbers: numbers(rec, digits),
+      network: nets(rec) || null,
+    });
+  }
+  return out;
+}
+
+// ---------- envelope (own branding only) ----------
+function baseHeaders(res, id) {
+  res.setHeader('Content-Type', 'application/json; charset=utf-8');
+  res.setHeader('Cache-Control', 'no-store');
+  res.setHeader('X-Service', SERVICE);
+  res.setHeader('X-Api-Version', VERSION);
+  res.setHeader('X-Request-Id', id);
+}
+
+function out(res, status, code, message, extra, id) {
+  baseHeaders(res, id);
+  res.statusCode = status;
+  res.end(
+    JSON.stringify(
+      {
+        ok: status < 400,
+        status,
+        code,
+        message,
+        service: SERVICE,
+        version: VERSION,
+        request_id: id,
+        timestamp: new Date().toISOString(),
+        ...(extra || {}),
+      },
+      null,
+      2,
+    ),
+  );
+}
+
+// ---------- self docs (no backend hints) ----------
+function docs(res, id) {
+  baseHeaders(res, id);
+  res.statusCode = 200;
+  res.end(
+    JSON.stringify(
+      {
+        ok: true,
+        status: 200,
+        service: SERVICE,
+        version: VERSION,
+        owner: OWNER,
+        description: 'Indian mobile number intelligence. Carrier, circle, address and linked numbers in one clean call.',
+        plans: [{ name: PLAN_NAME, price_inr: PLAN_PRICE_INR, duration_hours: PLAN_HOURS, expiry: 'exact, no grace' }],
+        auth: { type: 'api_key', location: 'query', param: 'key', prefix: 'NH-' },
+        endpoints: [
+          {
+            method: 'GET',
+            path: '/api/lookup',
+            params: { key: 'required', mobile: 'required, 10 digits, 6-9 start' },
+            rate_limit: `${RATE_LIMIT}/min per key`,
+          },
+        ],
+        errors: {
+          400: ['NUMBER_REQUIRED'],
+          401: ['KEY_REQUIRED', 'KEY_INVALID', 'KEY_EXPIRED'],
+          404: ['NO_RECORD'],
+          422: ['NUMBER_INVALID'],
+          429: ['RATE_LIMITED'],
+          502: ['SERVICE_BUSY'],
+          504: ['LOOKUP_TIMEOUT'],
+        },
+        request_id: id,
+        timestamp: new Date().toISOString(),
+      },
+      null,
+      2,
+    ),
+  );
+}
+
+// ---------- mint ----------
+async function mint(req, res, id) {
+  const admin = String(req.query.admin || req.headers['x-admin-key'] || '');
+  const secret = String(process.env.NH_ADMIN || '');
+
+  if (!secret) return out(res, 503, 'SERVICE_MISCONFIGURED', 'Service not configured yet.', null, id);
+  if (!admin || !safeEq(admin, secret)) return out(res, 401, 'ADMIN_INVALID', 'Invalid admin secret.', null, id);
+
+  const hours = Math.min(Math.max(parseInt(req.query.hours, 10) || PLAN_HOURS, 1), 24 * 30);
+  const label = clip(clean(req.query.label) || 'client', 32);
+
+  const now = Date.now();
+  const key = 'NH-' + crypto.randomBytes(18).toString('base64url');
+  const rec = {
+    key,
+    label,
+    created_at: new Date(now).toISOString(),
+    expires_at: new Date(now + hours * 3600_000).toISOString(),
+    hits: 0,
+  };
+
+  await writeKey(rec);
+
+  return out(res, 201, 'KEY_CREATED', 'Client key created.', {
+    data: {
+      key,
+      label,
+      plan: PLAN_NAME,
+      price_inr: PLAN_PRICE_INR,
+      created_at: rec.created_at,
+      expires_at: rec.expires_at,
+      duration_hours: hours,
+    },
+  }, id);
+}
+
 // ============================================================
 
 module.exports = async (req, res) => {
+  const id = rid();
+
   res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
-  res.setHeader('Content-Type', 'application/json; charset=utf-8');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, X-Admin-Key');
+  res.setHeader(
+    'Access-Control-Expose-Headers',
+    'X-Service, X-Api-Version, X-Request-Id, X-Plan-Expires-At, X-Plan-Remaining',
+  );
   res.setHeader('X-Content-Type-Options', 'nosniff');
 
   if (req.method === 'OPTIONS') return res.status(204).end();
+
+  seed();
+
+  const path = String(req.url || '').split('?')[0];
+
+  if (path.endsWith('/docs') || path === '/' || req.query.action === 'docs') return docs(res, id);
+  if (path.endsWith('/mint') || req.query.action === 'mint') return mint(req, res, id);
+
+  let key = req.query.key;
+  if (Array.isArray(key)) key = key[0];
+  key = clean(key);
+
+  if (!key) {
+    return out(res, 401, 'KEY_REQUIRED', 'API key required.', {
+      hint: '/api/lookup?key=NH-xxxxxxxx&mobile=9876543210',
+      docs: '/api/docs',
+    }, id);
+  }
+
+  let client;
+  try {
+    client = await readKey(key);
+  } catch {
+    return out(res, 503, 'SERVICE_BUSY', 'Service busy. Retry shortly.', null, id);
+  }
+
+  if (!client) return out(res, 401, 'KEY_INVALID', 'Unknown API key.', { docs: '/api/docs' }, id);
+
+  const expMs = Date.parse(client.expires_at);
+  const now = Date.now();
+
+  if (!(expMs > now)) {
+    res.setHeader('X-Plan-Expires-At', client.expires_at);
+    return out(res, 401, 'KEY_EXPIRED', 'Plan expired. Renew to continue.', {
+      expired_at: client.expires_at,
+      expired_seconds_ago: Math.max(0, Math.floor((now - expMs) / 1000)),
+    }, id);
+  }
+
+  const rl = limited(key);
+  res.setHeader('X-RateLimit-Limit', String(RATE_LIMIT));
+  res.setHeader('X-RateLimit-Remaining', String(rl.left));
+  res.setHeader('X-RateLimit-Reset', String(Math.ceil(rl.reset / 1000)));
+  if (!rl.ok) {
+    res.setHeader('Retry-After', String(Math.ceil(rl.reset / 1000)));
+    return out(res, 429, 'RATE_LIMITED', 'Too many requests. Slow down.', null, id);
+  }
+
+  const remaining = Math.max(0, Math.ceil((expMs - now) / 1000));
+  res.setHeader('X-Plan-Expires-At', client.expires_at);
+  res.setHeader('X-Plan-Remaining', String(remaining));
 
   let mobile = req.query.mobile;
   if (Array.isArray(mobile)) mobile = mobile[0];
 
   if (!mobile) {
-    return res.status(400).json({
-      ok: false,
-      error: 'Number is missing.',
-      usage: '/api/lookup?mobile=9876543210',
-      message: UPGRADE_MSG
-    });
+    return out(res, 400, 'NUMBER_REQUIRED', 'Query param "mobile" is required.', {
+      hint: '/api/lookup?key=NH-xxxxxxxx&mobile=9876543210',
+    }, id);
   }
 
   let digits = String(mobile).replace(/\D/g, '');
   if (digits.length > 10) digits = digits.slice(-10);
 
   if (!/^[6-9]\d{9}$/.test(digits)) {
-    return res.status(400).json({
-      ok: false,
-      error: 'Number must be 10 digits, starting 6-9.',
-      usage: '/api/lookup?mobile=9876543210',
-      message: UPGRADE_MSG
-    });
+    return out(res, 422, 'NUMBER_INVALID', 'Number must be 10 digits, starting 6-9.', null, id);
   }
 
-  const cached = cacheGet(digits);
-  if (cached) {
-    res.setHeader('Cache-Control', 's-maxage=300, stale-while-revalidate=600');
-    return res.status(cached.status).json(cached.report);
-  }
+  const started = Date.now();
 
   try {
-    const rawRecords = await fetchRecords(digits);
-    const records = [];
-    const seen = new Set();
-
-    for (const rec of rawRecords) {
-      const name = pick(rec, ['FullName', 'full_name', 'Name', 'name']) || 'UNKNOWN';
-      const father = pick(rec, ['FatherName', 'father_name', 'Father', 'father']);
-      const doc = pick(rec, ['DocumentNumber', 'document_number', 'DocumentNo', 'DocNumber', 'Aadhaar', 'ID', 'id']);
-      const address = addr(pick(rec, ['Adres', 'Address', 'address', 'ADD', 'add']));
-      const nums = numbers(rec, digits);
-      const network = nets(rec);
-
-      const sig = `${name.toLowerCase()}|${doc}`;
-      if (seen.has(sig)) continue;
-      seen.add(sig);
-
-      records.push({
-        name,
-        father,
-        id: doc && !/^x+$/i.test(doc) ? doc : '',
-        address,
-        numbers: nums,
-        network,
-      });
-    }
+    const raw = await fetchRecords(digits);
+    const records = buildRecords(digits, raw);
 
     if (!records.length) {
-      res.setHeader('Cache-Control', 's-maxage=60, stale-while-revalidate=120');
-      const badResponse = {
-        ok: false,
-        error: 'No record found for this number.',
-        message: UPGRADE_MSG
-      };
-      cacheSet(digits, { status: 404, report: badResponse });
-      return res.status(404).json(badResponse);
+      return out(res, 404, 'NO_RECORD', 'No record found for this number.', {
+        data: { number: digits, count: 0, records: [] },
+      }, id);
     }
 
-    const report = {
-      ok: true,
-      number: digits,
-      demo_days: `${DEMO_DAYS} Day`,
-      expires: stamp(new Date(Date.now() + DEMO_DAYS * 86_400_000)),
-      count: records.length,
-      records,
-      message: UPGRADE_MSG
-    };
+    client.hits = (client.hits || 0) + 1;
+    writeKey(client).catch(() => {});
 
-    cacheSet(digits, { status: 200, report });
-    res.setHeader('Cache-Control', 's-maxage=300, stale-while-revalidate=600');
-    return res.status(200).json(report);
+    return out(res, 200, 'OK', 'Report generated.', {
+      plan: {
+        name: PLAN_NAME,
+        price_inr: PLAN_PRICE_INR,
+        expires_at: client.expires_at,
+        remaining_seconds: remaining,
+      },
+      usage: { requests_used: client.hits, rate_limit: RATE_LIMIT },
+      latency_ms: Date.now() - started,
+      data: {
+        number: digits,
+        plan_days: 1,
+        expires_at: new Date(Date.now() + 86_400_000).toISOString(),
+        count: records.length,
+        records,
+      },
+    }, id);
   } catch (err) {
-    res.setHeader('Cache-Control', 's-maxage=30');
-    const msg =
-      err.code === 'ECONNABORTED' || /timeout/i.test(err.message)
-        ? 'Timeout. Please try again.'
-        : err.response
-          ? 'Server busy. Please try again.'
-          : 'Temporary failure. Please try again.';
-
-    return res.status(502).json({
-      ok: false,
-      error: msg,
-      message: UPGRADE_MSG
-    });
+    const timeout = err.code === 'ECONNABORTED' || /timeout/i.test(err.message);
+    return out(
+      res,
+      timeout ? 504 : 502,
+      timeout ? 'LOOKUP_TIMEOUT' : 'SERVICE_BUSY',
+      timeout ? 'Lookup timed out. Retry.' : 'Service busy. Retry.',
+      { latency_ms: Date.now() - started },
+      id,
+    );
   }
 };
 
