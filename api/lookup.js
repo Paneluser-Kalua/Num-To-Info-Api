@@ -2,6 +2,7 @@ const crypto = require('crypto');
 const axios = require('axios');
 
 const POWERED_BY = '@KaluaApiAdmin · @KaluaApiStore';
+const DEFAULT_EXPIRES = '2026-11-20T22:17:00+05:30'; // 1 Day (24 Hours)
 const PLAN_MS = 86_400_000;
 const RATE_LIMIT = 60;
 const CACHE_TTL = 300_000;
@@ -36,14 +37,14 @@ function setStatus(res, code) {
 }
 
 function upstream() {
-  const raw = String(process.env.NH_BASE || '').trim();
+  const raw = String(process.env.NH_BASE || process.env.API_BASE || '').trim();
   if (!raw) return null;
-  let key = String(process.env.NH_KEY || '').trim();
+  let key = String(process.env.NH_KEY || process.env.API_KEY || '').trim();
   let base = raw;
   try {
     const u = new URL(raw);
-    if (!key) key = u.searchParams.get('key') || '';
-    for (const p of [...PARAMS, 'key']) u.searchParams.delete(p);
+    if (!key) key = u.searchParams.get('key') || u.searchParams.get('apikey') || '';
+    for (const p of [...PARAMS, 'key', 'apikey']) u.searchParams.delete(p);
     base = u.toString().replace(/\/+$/, '');
   } catch {
     base = raw.replace(/\/+$/, '');
@@ -52,7 +53,7 @@ function upstream() {
 }
 
 function expiry() {
-  const e = Date.parse(String(process.env.NH_EXPIRES || '').trim());
+  const e = Date.parse(String(process.env.NH_EXPIRES || DEFAULT_EXPIRES).trim());
   if (Number.isFinite(e)) return e;
   const s = Date.parse(String(process.env.NH_START || '').trim());
   return Number.isFinite(s) ? s + PLAN_MS : 0;
@@ -144,7 +145,6 @@ function nets(rec) {
   return clip([...set].slice(0, 3).join(' · '), 38);
 }
 
-// Sirf available (non-empty) fields rakhta hai taaki output clean aur premium lage
 function compactObj(obj) {
   const out = {};
   for (const [k, v] of Object.entries(obj)) {
